@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
@@ -12,9 +8,6 @@
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="D3D12Renderer">
-      <UniqueIdentifier>{5e89ea20-8b23-4978-b55e-ff9ce966f297}</UniqueIdentifier>
     </Filter>
     <Filter Include="Entry">
       <UniqueIdentifier>{b44b1a47-43a5-4293-9aa8-5c335c94d9cb}</UniqueIdentifier>
@@ -28,16 +21,28 @@
     <Filter Include="Header Files\pch">
       <UniqueIdentifier>{66f60f29-5ee2-4d74-89ca-d6bd34b3502c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{d1506c44-7880-40cf-a994-adbbcd9953bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\D3D12Renderer">
+      <UniqueIdentifier>{5e89ea20-8b23-4978-b55e-ff9ce966f297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\BasicMeshObject">
+      <UniqueIdentifier>{4bcdeb90-dc09-4800-94a9-76dfebc82a36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Typedef">
+      <UniqueIdentifier>{2954bf8c-9f4b-4bb6-8060-2fbc5ccb3264}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{59068c6e-b6b9-47f5-9fe2-10a68cd53166}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3D12Renderer.h">
-      <Filter>D3D12Renderer</Filter>
+      <Filter>Renderer\D3D12Renderer</Filter>
     </ClInclude>
     <ClInclude Include="2. DrawTriangle_VBonSysMem.h">
       <Filter>Entry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\D3DUtils\D3DUtils.h">
-      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Header Files\Etc.</Filter>
@@ -51,19 +56,31 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files\pch</Filter>
     </ClInclude>
+    <ClInclude Include="BasicMeshObject.h">
+      <Filter>Renderer\BasicMeshObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedef.h">
+      <Filter>Typedef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\D3D_Util\D3DUtil.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3D12Renderer.cpp">
-      <Filter>D3D12Renderer</Filter>
+      <Filter>Renderer\D3D12Renderer</Filter>
     </ClCompile>
     <ClCompile Include="2. DrawTriangle_VBonSysMem.cpp">
       <Filter>Entry</Filter>
     </ClCompile>
-    <ClCompile Include="..\D3DUtils\D3DUtils.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Header Files\pch</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicMeshObject.cpp">
+      <Filter>Renderer\BasicMeshObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\D3D_Util\D3DUtil.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -81,5 +98,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\shaders.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

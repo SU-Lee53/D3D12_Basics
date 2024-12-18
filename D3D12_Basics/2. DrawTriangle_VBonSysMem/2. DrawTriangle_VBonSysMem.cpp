@@ -48,10 +48,16 @@ HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-// D3D12Renderer
-std::unique_ptr<D3D12Renderer> g_pRenderer;
-void RunGame();
+// CD3D12Renderer
+std::shared_ptr<CD3D12Renderer> g_pRenderer = nullptr;
+std::shared_ptr<void> g_pMeshObj = nullptr;
 
+ULONGLONG g_PrvFrameCheckTick = 0;
+ULONGLONG g_PrvUpdateTick = 0;
+DWORD g_FrameCount = 0;
+
+void RunGame();
+void Update();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -82,13 +88,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    g_pRenderer = std::make_unique<D3D12Renderer>();
-#ifndef _DEBUG
-    g_pRenderer->Initialize(ghMainWindow, FALSE, FALSE);
-#elif _DEBUG
+    g_pRenderer = std::make_shared<CD3D12Renderer>();
+#ifdef _DEBUG
     g_pRenderer->Initialize(g_hMainWindow, TRUE, TRUE); // Debug Layer ON / GPU Based Validation ON
+#elif _DEBUG
+    g_pRenderer->Initialize(g_hMainWindow, FALSE, FALSE);
 #endif
+    g_pMeshObj = g_pRenderer->CreateBasicMeshObject();
 
+    SetWindowText(g_hMainWindow, L"DrawTriangle_VBonSysMem");
 
     // Main message loop:
     while (1)
@@ -108,12 +116,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    g_pRenderer.reset();
+    if (g_pMeshObj)
+    {
+        g_pRenderer->DeleteBasicMeshObject(g_pMeshObj);
+        g_pMeshObj = nullptr;
+    }
+
+    if (g_pRenderer)
+        g_pRenderer.reset();
 
 
 #ifdef _DEBUG
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
-    _CrtDumpMemoryLeaks();
+    _ASSERT(_CrtCheckMemory());
 #endif _DEBUG
 
     return (int)msg.wParam;
@@ -122,18 +137,46 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 void RunGame()
 {
+    g_FrameCount++;
+    ULONGLONG CurTick = GetTickCount64();
+
     // Begin Render
     g_pRenderer->BeginRender();
 
+    // Game Logic
+    if (CurTick - g_PrvUpdateTick > 16)
+    {
+        // 60프레임으로 Update()
+        Update();
+        g_PrvUpdateTick = CurTick;
+    }
+
     // Render
+    g_pRenderer->RenderMeshObject(g_pMeshObj);
 
     // EndRender
     g_pRenderer->EndRender();
 
     // Present
     g_pRenderer->Present();
+
+    if (CurTick - g_PrvFrameCheckTick > 1000)
+    {
+        g_PrvFrameCheckTick = CurTick;
+
+        WCHAR wchTxt[64];
+        swprintf_s(wchTxt, L"FPS:%u", g_FrameCount);
+        SetWindowText(g_hMainWindow, wchTxt);
+
+        g_FrameCount = 0;
+    }
+
 }
 
+void Update()
+{
+
+}
 
 //
 //  FUNCTION: MyRegisterClass()

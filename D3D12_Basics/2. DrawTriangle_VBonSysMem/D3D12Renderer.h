@@ -2,17 +2,18 @@
 
 const UINT SWAP_CHAIN_FRAME_COUNT = 2;
 
-class D3D12Renderer
+class CD3D12Renderer : public std::enable_shared_from_this<CD3D12Renderer>
 {
 public:
-	D3D12Renderer();
-	~D3D12Renderer();
+	CD3D12Renderer();
+	~CD3D12Renderer();
 
 public:
 	BOOL Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV);
 	void BeginRender();
 	void EndRender();
 	void Present();
+	BOOL UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight);
 
 private:
 	BOOL CreateDescripterHeap();
@@ -22,6 +23,16 @@ private:
 private:
 	UINT64 Fence();
 	void WaitForFenceValue();
+
+public:
+	std::shared_ptr<void> CreateBasicMeshObject();
+	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
+	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle);
+
+
+public:
+	// Getter
+	ComPtr<ID3D12Device5>& GetDevice() { return m_pD3dDevice; }
 
 private:
 	HWND m_hWnd = nullptr;
@@ -34,10 +45,16 @@ private:
 	UINT64								m_ui64FenceValue;
 
 	// DXGI
-	D3D_FEATURE_LEVEL		m_featureLevel = D3D_FEATURE_LEVEL_11_0;
-	DXGI_ADAPTER_DESC1		m_adapterDesc = {};
+	D3D_FEATURE_LEVEL		m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
+	DXGI_ADAPTER_DESC1		m_AdapterDesc = {};
 	ComPtr<IDXGISwapChain3>	m_pSwapChain = nullptr;
 	DWORD					m_dwSwapChainFlags = 0;
+
+	// Viewport / Scissor Rect
+	D3D12_VIEWPORT	m_ViewPort = {};
+	D3D12_RECT		m_ScissorRect = {};
+	DWORD			m_dwWidth = 0;
+	DWORD			m_dwHeight = 0;
 
 	// Resources
 	std::array<ComPtr<ID3D12Resource>, SWAP_CHAIN_FRAME_COUNT> m_pRenderTargets;

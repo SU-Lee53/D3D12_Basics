@@ -2,11 +2,11 @@
 
 const UINT SWAP_CHAIN_FRAME_COUNT = 2;
 
-class D3D12Renderer
+class CD3D12Renderer
 {
 public:
-	D3D12Renderer();
-	~D3D12Renderer();
+	CD3D12Renderer();
+	~CD3D12Renderer();
 
 public:
 	BOOL Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV);
@@ -34,8 +34,8 @@ private:
 	UINT64								m_ui64FenceValue;
 
 	// DXGI
-	D3D_FEATURE_LEVEL		m_featureLevel = D3D_FEATURE_LEVEL_11_0;
-	DXGI_ADAPTER_DESC1		m_adapterDesc = {};
+	D3D_FEATURE_LEVEL		m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
+	DXGI_ADAPTER_DESC1		m_AdapterDesc = {};
 	ComPtr<IDXGISwapChain3>	m_pSwapChain = nullptr;
 	DWORD					m_dwSwapChainFlags = 0;
 

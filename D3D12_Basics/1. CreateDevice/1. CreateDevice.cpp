@@ -48,8 +48,8 @@ HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-// D3D12Renderer
-std::unique_ptr<D3D12Renderer> g_pRenderer;
+// CD3D12Renderer
+std::unique_ptr<CD3D12Renderer> g_pRenderer;
 void RunGame();
 
 
@@ -82,7 +82,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    g_pRenderer = std::make_unique<D3D12Renderer>();
+    g_pRenderer = std::make_unique<CD3D12Renderer>();
 #ifndef _DEBUG
     g_pRenderer->Initialize(ghMainWindow, FALSE, FALSE);
 #elif _DEBUG

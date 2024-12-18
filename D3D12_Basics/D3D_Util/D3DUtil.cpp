@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "D3DUtils.h"
+#include "D3DUtil.h"
 
 void D3DUtils::SetDebugLayerInfo(ComPtr<ID3D12Device> pD3DDevice)
 {
