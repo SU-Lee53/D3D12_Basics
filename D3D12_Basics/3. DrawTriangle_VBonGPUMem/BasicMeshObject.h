@@ -8,7 +8,7 @@ public:
 	BasicMeshObject();
 	~BasicMeshObject();
 
-	BOOL Initialize(std::shared_ptr<CD3D12Renderer> pRenderer);
+	BOOL Initialize(std::shared_ptr<D3D12Renderer> pRenderer);
 	void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList);
 	BOOL CreateMesh();
 
@@ -25,7 +25,7 @@ private:
 	static ComPtr<ID3D12PipelineState>	m_pPipelineState;
 	static DWORD						m_dwInitRefCount;
 
-	std::shared_ptr<CD3D12Renderer> m_pRenderer = nullptr;
+	std::shared_ptr<D3D12Renderer> m_pRenderer = nullptr;
 
 	ComPtr<ID3D12Resource> m_pVertexBuffer = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView = {};

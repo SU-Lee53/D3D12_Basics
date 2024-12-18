@@ -48,7 +48,7 @@ HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-// CD3D12Renderer
+// D3D12Renderer
 std::shared_ptr<CD3D12Renderer> g_pRenderer = nullptr;
 std::shared_ptr<void> g_pMeshObj = nullptr;
 
@@ -88,7 +88,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    g_pRenderer = std::make_shared<CD3D12Renderer>();
+    g_pRenderer = std::make_shared<D3D12Renderer>();
 #ifdef _DEBUG
     g_pRenderer->Initialize(g_hMainWindow, TRUE, TRUE); // Debug Layer ON / GPU Based Validation ON
 #elif _DEBUG

@@ -2,17 +2,17 @@
 #include "D3D12Renderer.h"
 #include "D3DUtils.h"
 
-CD3D12Renderer::CD3D12Renderer()
+D3D12Renderer::D3D12Renderer()
 {
 }
 
-CD3D12Renderer::~CD3D12Renderer()
+D3D12Renderer::~D3D12Renderer()
 {
 	WaitForFenceValue();
 	// ComPtr을 사용하므로 별도의 CleanUp 은 필요없을것으로 생각됨
 }
 
-BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
+BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
 {
 	BOOL bResult = FALSE;
 
@@ -67,7 +67,7 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 		{
 			pAdapter->GetDesc1(&adapterDesc);
 
-			hr = D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3dDevice.GetAddressOf()));
+			hr = D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3DDevice.GetAddressOf()));
 			if (SUCCEEDED(hr))
 			{
 				m_FeatureLevel = featureLevels[featureLevelIndex];
@@ -76,12 +76,12 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 
 		}
 
-		if (m_pD3dDevice)
+		if (m_pD3DDevice)
 			break;
 	}
 
-	// check if m_pD3dDevice is created
-	if (!m_pD3dDevice)
+	// check if m_pD3DDevice is created
+	if (!m_pD3DDevice)
 	{
 		__debugbreak();
 		return bResult;
@@ -92,7 +92,7 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 
 	if (pDebugController)
 	{
-		D3DUtils::SetDebugLayerInfo(m_pD3dDevice);
+		D3DUtils::SetDebugLayerInfo(m_pD3DDevice);
 	}
 
 
@@ -103,7 +103,7 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-		hr = m_pD3dDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCommandQueue.GetAddressOf()));
+		hr = m_pD3DDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCommandQueue.GetAddressOf()));
 		if (FAILED(hr))
 		{
 			__debugbreak();
@@ -164,7 +164,7 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 	for (UINT n = 0; n < SWAP_CHAIN_FRAME_COUNT; n++)
 	{
 		m_pSwapChain->GetBuffer(n, IID_PPV_ARGS(m_pRenderTargets[n].GetAddressOf()));
-		m_pD3dDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
+		m_pD3DDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_uiRTVDescriptorSize);
 	}
 
@@ -179,7 +179,7 @@ BOOL CD3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableG
 	return bResult;
 }
 
-void CD3D12Renderer::BeginRender()
+void D3D12Renderer::BeginRender()
 {
 	// 화면 클리어
 	if (FAILED(m_pCommandAllocator->Reset()))
@@ -205,7 +205,7 @@ void CD3D12Renderer::BeginRender()
 	m_pCommandList->ClearRenderTargetView(rtvHandle, BackColor, 0, nullptr);
 }
 
-void CD3D12Renderer::EndRender()
+void D3D12Renderer::EndRender()
 {
 	// 지오메트리 렌더링
 	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -215,7 +215,7 @@ void CD3D12Renderer::EndRender()
 	m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists->GetAddressOf());
 }
 
-void CD3D12Renderer::Present()
+void D3D12Renderer::Present()
 {
 	// Back buffer 를 Primary buffer 로 전송
 
@@ -244,7 +244,7 @@ void CD3D12Renderer::Present()
 
 }
 
-BOOL CD3D12Renderer::CreateDescripterHeap()
+BOOL D3D12Renderer::CreateDescripterHeap()
 {
 	// 렌더 타겟용 디스크립터 힙
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -252,29 +252,29 @@ BOOL CD3D12Renderer::CreateDescripterHeap()
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	
-	HRESULT hr = m_pD3dDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.GetAddressOf()));
+	HRESULT hr = m_pD3DDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
 		return FALSE;
 	}
 
-	m_uiRTVDescriptorSize = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);	// 32 in this system
+	m_uiRTVDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);	// 32 in this system
 
 	return TRUE;
 }
 
-BOOL CD3D12Renderer::CreateCommandList()
+BOOL D3D12Renderer::CreateCommandList()
 {
 	HRESULT hr;
-	hr = m_pD3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocator.GetAddressOf()));
+	hr = m_pD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocator.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
 		return FALSE;
 	}
 
-	hr = m_pD3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_pCommandList.GetAddressOf()));
+	hr = m_pD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_pCommandList.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
@@ -286,10 +286,10 @@ BOOL CD3D12Renderer::CreateCommandList()
 	return TRUE;
 }
 
-BOOL CD3D12Renderer::CreateFence()
+BOOL D3D12Renderer::CreateFence()
 {
 	HRESULT hr;
-	hr = m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.GetAddressOf()));
+	hr = m_pD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
@@ -303,7 +303,7 @@ BOOL CD3D12Renderer::CreateFence()
 	return TRUE;
 }
 
-UINT64 CD3D12Renderer::Fence()
+UINT64 D3D12Renderer::Fence()
 {
 	// 제출한 작업에 Fence 를 걸어 끝났는지 확인 가능
 	m_ui64FenceValue++;
@@ -311,7 +311,7 @@ UINT64 CD3D12Renderer::Fence()
 	return m_ui64FenceValue;
 }
 
-void CD3D12Renderer::WaitForFenceValue()
+void D3D12Renderer::WaitForFenceValue()
 {
 	const UINT64 ExpectedFenceValue = m_ui64FenceValue;
 

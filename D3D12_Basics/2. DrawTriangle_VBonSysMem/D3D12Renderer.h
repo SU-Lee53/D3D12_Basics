@@ -2,7 +2,7 @@
 
 const UINT SWAP_CHAIN_FRAME_COUNT = 2;
 
-class CD3D12Renderer : public std::enable_shared_from_this<CD3D12Renderer>
+class D3D12Renderer : public std::enable_shared_from_this<CD3D12Renderer>
 {
 public:
 	CD3D12Renderer();

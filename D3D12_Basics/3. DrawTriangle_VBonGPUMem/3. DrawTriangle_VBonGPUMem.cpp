@@ -49,14 +49,20 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 // D3D12Renderer
-std::unique_ptr<D3D12Renderer> g_pRenderer;
-void RunGame();
+std::shared_ptr<D3D12Renderer> g_pRenderer = nullptr;
+std::shared_ptr<void> g_pMeshObj = nullptr;
 
+ULONGLONG g_PrvFrameCheckTick = 0;
+ULONGLONG g_PrvUpdateTick = 0;
+DWORD g_FrameCount = 0;
+
+void RunGame();
+void Update();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -68,7 +74,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY1CREATEDEVICE, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY3DRAWTRIANGLEVBONGPUMEM, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -78,17 +84,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY1CREATEDEVICE));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DRAWTRIANGLEVBONGPUMEM));
 
     MSG msg;
 
-    g_pRenderer = std::make_unique<D3D12Renderer>();
-#ifndef _DEBUG
-    g_pRenderer->Initialize(ghMainWindow, FALSE, FALSE);
-#elif _DEBUG
+    g_pRenderer = std::make_shared<D3D12Renderer>();
+#ifdef _DEBUG
     g_pRenderer->Initialize(g_hMainWindow, TRUE, TRUE); // Debug Layer ON / GPU Based Validation ON
+#elif _DEBUG
+    g_pRenderer->Initialize(g_hMainWindow, FALSE, FALSE);
 #endif
+    g_pMeshObj = g_pRenderer->CreateBasicMeshObject();
 
+    SetWindowText(g_hMainWindow, L"DrawTriangle_VBonSysMem");
 
     // Main message loop:
     while (1)
@@ -108,32 +116,67 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    g_pRenderer.reset();
+    if (g_pMeshObj)
+    {
+        g_pRenderer->DeleteBasicMeshObject(g_pMeshObj);
+        g_pMeshObj = nullptr;
+    }
+
+    if (g_pRenderer)
+        g_pRenderer.reset();
 
 
 #ifdef _DEBUG
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG); 
-    _CrtDumpMemoryLeaks();
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+    _ASSERT(_CrtCheckMemory());
 #endif _DEBUG
 
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
 
 
 void RunGame()
 {
+    g_FrameCount++;
+    ULONGLONG CurTick = GetTickCount64();
+
     // Begin Render
     g_pRenderer->BeginRender();
 
+    // Game Logic
+    if (CurTick - g_PrvUpdateTick > 16)
+    {
+        // 60프레임으로 Update()
+        Update();
+        g_PrvUpdateTick = CurTick;
+    }
+
     // Render
+    g_pRenderer->RenderMeshObject(g_pMeshObj);
 
     // EndRender
     g_pRenderer->EndRender();
 
     // Present
     g_pRenderer->Present();
+
+    if (CurTick - g_PrvFrameCheckTick > 1000)
+    {
+        g_PrvFrameCheckTick = CurTick;
+
+        WCHAR wchTxt[64];
+        swprintf_s(wchTxt, L"FPS:%u", g_FrameCount);
+        SetWindowText(g_hMainWindow, wchTxt);
+
+        g_FrameCount = 0;
+    }
+
 }
 
+void Update()
+{
+
+}
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -146,17 +189,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY1CREATEDEVICE));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY1CREATEDEVICE);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY3DRAWTRIANGLEVBONGPUMEM));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DRAWTRIANGLEVBONGPUMEM);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
@@ -173,20 +216,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return nullptr;
-   }
+    if (!hWnd)
+    {
+        return nullptr;
+    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
-   return hWnd;
+    return hWnd;
 }
 
 //
@@ -204,30 +247,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
+    }
+    break;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code that uses hdc here...
+        EndPaint(hWnd, &ps);
+    }
+    break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "D3D12Renderer.h"
-#include "../D3D_Util/D3DUtil.h"
+#include "D3D12ResourceManager.h"
 #include "BasicMeshObject.h"
+#include "D3DUtil.h"
 
 D3D12Renderer::D3D12Renderer()
 {
@@ -61,28 +62,46 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 		D3D_FEATURE_LEVEL_11_0
 	};
 
-	for (DWORD featureLevelIndex = 0; featureLevelIndex < featureLevels.size(); featureLevelIndex++)
+
+	size_t bestMemory = 0;
+	for (UINT adapterIndex = 0;; ++adapterIndex)
 	{
-		UINT uiAdapterIndex = 0;
-		while (DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(uiAdapterIndex, pAdapter.GetAddressOf()))
+		ComPtr<IDXGIAdapter1> pCurAdapter;
+		HRESULT hr = pFactory->EnumAdapters1(adapterIndex, pCurAdapter.GetAddressOf());
+
+		if (hr == DXGI_ERROR_NOT_FOUND)
 		{
-			pAdapter->GetDesc1(&adapterDesc);
-
-			hr = D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3dDevice.GetAddressOf()));
-			if (SUCCEEDED(hr))
-			{
-				m_FeatureLevel = featureLevels[featureLevelIndex];
-				break;
-			}
-
+			break;
 		}
 
-		if (m_pD3dDevice)
-			break;
+		DXGI_ADAPTER_DESC1 curAdapterDesc;
+		pCurAdapter->GetDesc1(&curAdapterDesc);
+
+		// VRAM 을 메가바이트 단위로 변환
+		size_t memory = curAdapterDesc.DedicatedVideoMemory / (1024 * 1024);
+
+		// VRAM 이 가장 큰 어댑터로 선택
+		if (memory > bestMemory)
+		{
+			bestMemory = memory;
+			pAdapter = pCurAdapter;
+			adapterDesc = curAdapterDesc;
+		}
+	}
+
+	for (DWORD featureLevelIndex = 0; featureLevelIndex < featureLevels.size(); featureLevelIndex++)
+	{
+		if (pAdapter)
+		{
+			if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3DDevice.GetAddressOf()))))
+			{
+				break;
+			}
+		}
 	}
 
 	// check if m_pD3DDevice is created
-	if (!m_pD3dDevice)
+	if (!m_pD3DDevice)
 	{
 		__debugbreak();
 		return bResult;
@@ -93,7 +112,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 
 	if (pDebugController)
 	{
-		D3DUtils::SetDebugLayerInfo(m_pD3dDevice);
+		D3DUtils::SetDebugLayerInfo(m_pD3DDevice);
 	}
 
 
@@ -104,7 +123,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-		hr = m_pD3dDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCommandQueue.GetAddressOf()));
+		hr = m_pD3DDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCommandQueue.GetAddressOf()));
 		if (FAILED(hr))
 		{
 			__debugbreak();
@@ -179,7 +198,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	for (UINT n = 0; n < SWAP_CHAIN_FRAME_COUNT; n++)
 	{
 		m_pSwapChain->GetBuffer(n, IID_PPV_ARGS(m_pRenderTargets[n].GetAddressOf()));
-		m_pD3dDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
+		m_pD3DDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_uiRTVDescriptorSize);
 	}
 
@@ -188,6 +207,9 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 
 	// 2-6. Fence
 	CreateFence();
+
+	m_pResourceManager = std::make_shared<D3D12ResourceManager>();
+	m_pResourceManager->Initialize(m_pD3DDevice);
 
 	bResult = TRUE;
 
@@ -295,7 +317,7 @@ BOOL D3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBuffer
 	for (UINT n = 0; n < SWAP_CHAIN_FRAME_COUNT; n++)
 	{
 		m_pSwapChain->GetBuffer(n, IID_PPV_ARGS(m_pRenderTargets[n].GetAddressOf()));
-		m_pD3dDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
+		m_pD3DDevice->CreateRenderTargetView(m_pRenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_uiRTVDescriptorSize);
 	}
 
@@ -319,14 +341,14 @@ BOOL D3D12Renderer::CreateDescripterHeap()
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	
-	HRESULT hr = m_pD3dDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.GetAddressOf()));
+	HRESULT hr = m_pD3DDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pRTVHeap.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
 		return FALSE;
 	}
 
-	m_uiRTVDescriptorSize = m_pD3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);	// 32 in this system
+	m_uiRTVDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);	// 32 in this system
 
 	return TRUE;
 }
@@ -334,14 +356,14 @@ BOOL D3D12Renderer::CreateDescripterHeap()
 BOOL D3D12Renderer::CreateCommandList()
 {
 	HRESULT hr;
-	hr = m_pD3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocator.GetAddressOf()));
+	hr = m_pD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocator.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
 		return FALSE;
 	}
 
-	hr = m_pD3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_pCommandList.GetAddressOf()));
+	hr = m_pD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_pCommandList.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
@@ -356,7 +378,7 @@ BOOL D3D12Renderer::CreateCommandList()
 BOOL D3D12Renderer::CreateFence()
 {
 	HRESULT hr;
-	hr = m_pD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.GetAddressOf()));
+	hr = m_pD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		__debugbreak();
@@ -390,7 +412,7 @@ void D3D12Renderer::WaitForFenceValue()
 	}
 }
 
-std::shared_ptr<void> CD3D12Renderer::CreateBasicMeshObject()
+std::shared_ptr<void> D3D12Renderer::CreateBasicMeshObject()
 {
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::make_shared<BasicMeshObject>();
 	pMeshObj->Initialize(shared_from_this());
@@ -399,13 +421,13 @@ std::shared_ptr<void> CD3D12Renderer::CreateBasicMeshObject()
 	return pMeshObj;
 }
 
-void CD3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
+void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 {
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	pMeshObj.reset();
 }
 
-void CD3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle)
+void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 {
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	pMeshObj->Draw(m_pCommandList.Get());
