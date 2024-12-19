@@ -139,7 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="5. Texture.h" />
     <ClInclude Include="BasicMeshObject.h" />
     <ClInclude Include="D3D12Renderer.h" />
     <ClInclude Include="D3D12ResourceManager.h" />
@@ -151,11 +150,11 @@
     <ClInclude Include="Typedef.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="5. Texture.cpp" />
     <ClCompile Include="BasicMeshObject.cpp" />
     <ClCompile Include="D3D12Renderer.cpp" />
     <ClCompile Include="D3D12ResourceManager.cpp" />
     <ClCompile Include="D3DUtil.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>

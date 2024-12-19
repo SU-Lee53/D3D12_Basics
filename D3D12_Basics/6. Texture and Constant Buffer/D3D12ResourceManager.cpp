@@ -214,6 +214,156 @@ HRESULT D3D12ResourceManager::CreateIndexBuffer(DWORD dwIndexNum, D3D12_INDEX_BU
 	return hr;
 }
 
+BOOL D3D12ResourceManager::CreateTexture(ComPtr<ID3D12Resource>& prefOutResource, UINT width, UINT height, DXGI_FORMAT format, BYTE* pInitImage)
+{
+	ComPtr<ID3D12Resource> pTexResource = nullptr;
+	ComPtr<ID3D12Resource> pUploadBuffer = nullptr;
+
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = format;
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	HRESULT hr = S_OK;
+	hr = m_pD3DDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+		nullptr,
+		IID_PPV_ARGS(pTexResource.GetAddressOf()));
+
+	if (FAILED(hr))
+	{
+		__debugbreak();
+		return FALSE;
+	}
+
+	if (pInitImage)
+	{
+		D3D12_RESOURCE_DESC Desc = pTexResource->GetDesc();
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT FootPrint;
+		UINT Rows = 0;
+		UINT64 RowSize = 0;
+		UINT64 TotalBytes = 0;
+
+		m_pD3DDevice->GetCopyableFootprints(&Desc, 0, 1, 0, &FootPrint, &Rows, &RowSize, &TotalBytes);
+
+		std::shared_ptr<BYTE> pMappedPtr = nullptr;
+		CD3DX12_RANGE writeRange(0, 0);
+
+		UINT64 uploadBufferSize = GetRequiredIntermediateSize(pTexResource.Get(), 0, 1);
+
+		hr = m_pD3DDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(pUploadBuffer.GetAddressOf()));
+		if (FAILED(hr))
+		{
+			__debugbreak();
+			return FALSE;
+		}
+
+		HRESULT hr = pUploadBuffer->Map(0, &writeRange, reinterpret_cast<void**>(&pMappedPtr));
+		if (SUCCEEDED(hr))
+		{
+			const BYTE* pSrc = pInitImage;
+			BYTE* pDest = pMappedPtr.get();
+			for (UINT y = 0; y < height; y++)
+			{
+				std::memcpy(pDest, pSrc, width * 4);
+				pSrc += (width * 4);
+				pDest += FootPrint.Footprint.RowPitch;
+			}
+		}
+		else
+		{
+			__debugbreak();
+			return FALSE;
+		}
+		pUploadBuffer->Unmap(0, nullptr);
+
+		UpdateTextureForWrite(pTexResource, pUploadBuffer);
+
+	}
+
+	prefOutResource = pTexResource;
+
+	return TRUE;
+
+}
+
+void D3D12ResourceManager::UpdateTextureForWrite(ComPtr<ID3D12Resource> pDestTexResource, ComPtr<ID3D12Resource> pSrcTexResource)
+{
+	// 이건 왜 있음?
+	//	- 사실상 GPU 메모리로 텍스쳐 데이터를 올리는건 여기서 진행됨
+	//	- 이전 CreateTexture 는 선형 메모리로 pTexResource 에다가 복사해두었지만 GPU 입장에서는 캐시미스가 잦아서 좋지 못한 구조임
+	//	- 여기서는 CopyTextureRegion 를 이용하여 pTexResource 를 하드웨어가 써먹기 좋은 (캐시 히트가 잘나는) 구조로 GPU에 보냄
+
+	const DWORD MAX_SUB_RESOURCE_NUM = 32;	// 최대 MipMap 레벨. 32단계까지는 갈일이 사실상 없겠지만 여유롭게 잡음
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT FootPrint[MAX_SUB_RESOURCE_NUM] = {};
+	UINT Rows[MAX_SUB_RESOURCE_NUM] = {};
+	UINT64 RowSize[MAX_SUB_RESOURCE_NUM] = {};
+	UINT64 TotalBytes = 0;
+
+	D3D12_RESOURCE_DESC desc = pDestTexResource->GetDesc();
+	if (desc.MipLevels > (UINT)_countof(FootPrint))	// _countof(FootPrint) == MAX_SUB_RESOURCE_NUM 사실상 허용된 밉맵 레벨이 넘으면 걍 터트리라는 말
+	{
+		__debugbreak();
+		return;
+	}
+
+	m_pD3DDevice->GetCopyableFootprints(&desc, 0, desc.MipLevels, 0, FootPrint, Rows, RowSize, &TotalBytes);
+
+	if (FAILED(m_pCommandAllocator->Reset()))
+	{
+		__debugbreak();
+		return;
+	}
+
+	if (FAILED(m_pCommandList->Reset(m_pCommandAllocator.Get(), nullptr)))
+	{
+		__debugbreak();
+		return;
+	}
+
+	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDestTexResource.Get(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+	for (DWORD i = 0; i < desc.MipLevels; i++)
+	{
+		D3D12_TEXTURE_COPY_LOCATION destLocation = {};
+		destLocation.PlacedFootprint = FootPrint[i];
+		destLocation.pResource = pDestTexResource.Get();
+		destLocation.SubresourceIndex = i;
+		destLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+		D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+		srcLocation.PlacedFootprint = FootPrint[i];
+		srcLocation.pResource = pSrcTexResource.Get();
+		srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+		m_pCommandList->CopyTextureRegion(&destLocation, 0, 0, 0, &srcLocation, nullptr);
+
+	}
+	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDestTexResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE));
+	m_pCommandList->Close();
+
+	ID3D12CommandList* ppCommandList[] = { m_pCommandList.Get() };
+	m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandList), ppCommandList);
+
+	Fence();
+	WaitForFenceValue();
+
+}
+
 void D3D12ResourceManager::CreateFence()
 {
 	if (FAILED(m_pD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.GetAddressOf()))))

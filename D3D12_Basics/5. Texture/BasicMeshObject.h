@@ -1,5 +1,11 @@
 #pragma once
 
+enum BASIC_MESH_DESCRIPTOR_INDEX
+{
+	BASIC_MESH_DESCRIPTOR_INDEX_TEX = 0
+};
+
+
 class D3D12Renderer;
 
 class BasicMeshObject
@@ -17,7 +23,8 @@ private:
 
 	BOOL InitRootSignature();
 	BOOL InitPipelineState();
-
+	
+	BOOL CreateDescriptorTable();
 
 private:
 	// 모든 BasicMeshObject 아래 3가지를 객체들이 공유함
@@ -33,7 +40,13 @@ private:
 	ComPtr<ID3D12Resource> m_pIndexBuffer = nullptr;
 	D3D12_INDEX_BUFFER_VIEW m_IndexBufferView = {};
 
+	ComPtr<ID3D12Resource> m_pTexResource = nullptr;
 
+	// Descriptor
+	UINT m_srvDescriptorSize = 0;
+	ComPtr<ID3D12DescriptorHeap> m_pDescriptorHeap = nullptr;
+	
+	const static UINT DESCRIPTOR_COUNT_FOR_DRAW = 1;
 
 };
 

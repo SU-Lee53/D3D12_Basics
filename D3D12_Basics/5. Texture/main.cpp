@@ -1,4 +1,4 @@
-ï»¿#include "pch.h"
+#include "pch.h"
 #include "Resource.h"
 #include "D3D12Renderer.h"
 
@@ -16,11 +16,11 @@ extern "C" {__declspec(dllexport) DWORD NvOptimuisEnablement = 0x000000001; }
 /////////////////////////////////////////////////////////////////////////////////////////////
 // D3D12 Agility SDK Runtime 
 // 
-// ì›ëž˜ ìžë™ìœ¼ë¡œ í™˜ê²½ì— ë§žê²Œ ì„¸íŒ…ë˜ë‚˜ ì—¬ê¸°ì„  ìˆ˜ë™ìœ¼ë¡œ ì„¤ì •í•œë‹¤
+// ¿ø·¡ ÀÚµ¿À¸·Î È¯°æ¿¡ ¸Â°Ô ¼¼ÆÃµÇ³ª ¿©±â¼± ¼öµ¿À¸·Î ¼³Á¤ÇÑ´Ù
 
 //extern "C" {__declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
-// ê°•ì˜ì˜ SDK ë²„ì „ì´ í˜„ìž¬ ì†”ë£¨ì…˜ì´ SDK ë²„ì „ê³¼ ë§žì§€ì•ŠìŒ. í™•ì¸ í•„ìš”
-// ì¼ë‹¨ ìžë™ìœ¼ë¡œ ì„¤ì •ë˜ë„ë¡ ì£¼ì„ì²˜ë¦¬
+// °­ÀÇÀÇ SDK ¹öÀüÀÌ ÇöÀç ¼Ö·ç¼ÇÀÌ SDK ¹öÀü°ú ¸ÂÁö¾ÊÀ½. È®ÀÎ ÇÊ¿ä
+// ÀÏ´Ü ÀÚµ¿À¸·Î ¼³Á¤µÇµµ·Ï ÁÖ¼®Ã³¸®
 
 #ifdef _M_ARM64EC
 extern "C" {__declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\arm64"; }
@@ -149,7 +149,7 @@ void RunGame()
     // Game Logic
     if (CurTick - g_PrvUpdateTick > 16)
     {
-        // 60í”„ë ˆìž„ìœ¼ë¡œ Update()
+        // 60ÇÁ·¹ÀÓÀ¸·Î Update()
         Update();
         g_PrvUpdateTick = CurTick;
     }
@@ -298,7 +298,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
-        break; 
+        break;
     }
     return (INT_PTR)FALSE;
 }

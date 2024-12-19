@@ -11,6 +11,9 @@ public:
 	HRESULT CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, D3D12_VERTEX_BUFFER_VIEW& refOutVertexBufferView, ComPtr<ID3D12Resource>& prefOutBuffer, void* pInitData);
 	HRESULT CreateIndexBuffer(DWORD dwIndexNum, D3D12_INDEX_BUFFER_VIEW& refOutIndexBufferView, ComPtr<ID3D12Resource>& prefOutBuffer, void* pInitData);
 
+	BOOL CreateTexture(ComPtr<ID3D12Resource>& prefOutResource, UINT width, UINT height, DXGI_FORMAT format, BYTE* pInitImage);
+	void UpdateTextureForWrite(ComPtr<ID3D12Resource> pDescTexResource, ComPtr<ID3D12Resource> pSrcTexResource);
+
 public:
 	void CreateFence();
 	void CreateCommandList();

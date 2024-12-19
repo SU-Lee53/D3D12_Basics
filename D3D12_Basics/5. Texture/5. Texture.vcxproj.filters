@@ -72,9 +72,6 @@
     <ClInclude Include="Typedef.h">
       <Filter>Typedef</Filter>
     </ClInclude>
-    <ClInclude Include="5. Texture.h">
-      <Filter>Entry</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicMeshObject.cpp">
@@ -92,7 +89,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Headers\pch</Filter>
     </ClCompile>
-    <ClCompile Include="5. Texture.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Entry</Filter>
     </ClCompile>
   </ItemGroup>

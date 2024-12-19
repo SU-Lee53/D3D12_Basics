@@ -24,3 +24,21 @@ void D3DUtils::SetDebugLayerInfo(ComPtr<ID3D12Device> pD3DDevice)
 		pInfoQueue->AddStorageFilterEntries(&filter);
 	}
 }
+
+void D3DUtils::SetDefaultSamplerDesc(D3D12_STATIC_SAMPLER_DESC* pOutSamplerDesc, UINT RegisterIndex)
+{
+	pOutSamplerDesc->Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+
+	pOutSamplerDesc->AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	pOutSamplerDesc->AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	pOutSamplerDesc->AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	pOutSamplerDesc->MipLODBias = 0.f;
+	pOutSamplerDesc->MaxAnisotropy = 16;
+	pOutSamplerDesc->ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	pOutSamplerDesc->BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+	pOutSamplerDesc->MinLOD = -FLT_MAX;
+	pOutSamplerDesc->MaxLOD = D3D12_FLOAT32_MAX;
+	pOutSamplerDesc->ShaderRegister = RegisterIndex;
+	pOutSamplerDesc->RegisterSpace = 0;
+	pOutSamplerDesc->ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+}
