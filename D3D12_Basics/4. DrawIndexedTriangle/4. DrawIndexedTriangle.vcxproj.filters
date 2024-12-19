@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Entry">
+      <UniqueIdentifier>{944724f1-98ae-4ba2-81ac-784e394f0961}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{05b342fe-2fd9-41d3-9b12-9849b8cfc27d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Typedef">
+      <UniqueIdentifier>{42cc3c8f-a32c-456e-88e5-a053998e03f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UItil">
+      <UniqueIdentifier>{7a1452d2-6074-4c0f-979b-9a7d8c29f078}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{add34e18-6d1b-4fc5-9768-1910da4653d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Etc.">
+      <UniqueIdentifier>{ee5ac6c8-0889-471b-9a54-c5c3cf874958}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Pch">
+      <UniqueIdentifier>{8cb3ca75-779c-4679-93da-c5fbf1a5324e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{ea8b5c39-460c-4b79-9961-6a3bb4b4a574}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="4. DrawIndexedTriangle.h">
+      <Filter>Entry</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Headers\Etc.</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Headers\Etc.</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Headers\Etc.</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12ResourceManager.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicMeshObject.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DUtil.h">
+      <Filter>UItil</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedef.h">
+      <Filter>Typedef</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Headers\Pch</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="4. DrawIndexedTriangle.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="4. DrawIndexedTriangle.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="4. DrawIndexedTriangle.cpp">
+      <Filter>Entry</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicMeshObject.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12ResourceManager.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DUtil.cpp">
+      <Filter>UItil</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Headers\Pch</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\shaders.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
