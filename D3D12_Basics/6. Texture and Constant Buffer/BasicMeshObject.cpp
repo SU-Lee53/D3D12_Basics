@@ -27,8 +27,11 @@ BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
 	return bResult;
 }
 
-void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList)
+void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos)
 {
+	m_pSysConstBufferDefault->offset.x = pPos.x;
+	m_pSysConstBufferDefault->offset.y = pPos.y;
+
 	// Root Signature 설정
 	pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
 
@@ -42,7 +45,6 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList)
 	pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
 	pCommandList->IASetIndexBuffer(&m_IndexBufferView);
-	//pCommandList->DrawInstanced(3, 1, 0, 0);
 	pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
@@ -128,8 +130,46 @@ BOOL BasicMeshObject::CreateMesh()
 		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		SRVDesc.Texture2D.MipLevels = 1;
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE srv(m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), BASIC_MESH_DESCRIPTOR_INDEX_TEX, m_srvDescriptorSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE srv(m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_TEX, m_srvDescriptorSize);
 		pD3DDevice->CreateShaderResourceView(m_pTexResource.Get(), &SRVDesc, srv);
+	}
+	
+	// Constant Buffer 생성
+	{
+		// Constant Buffer 는 256바이트 정렬이 되어있어야 함
+		const UINT constantBufferSize = (UINT)D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT));
+
+		if (FAILED(pD3DDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize),
+			D3D12_RESOURCE_STATE_COMMON,
+			nullptr,
+			IID_PPV_ARGS(m_pConstantBuffer.GetAddressOf()))))
+		{
+			__debugbreak();
+			return FALSE;
+		}
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		cbvDesc.BufferLocation = m_pConstantBuffer->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = constantBufferSize;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE cbv(m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_CBV, m_srvDescriptorSize);
+		pD3DDevice->CreateConstantBufferView(&cbvDesc, cbv);
+
+		CD3DX12_RANGE writeRange(0, 0);
+		if (SUCCEEDED(m_pConstantBuffer->Map(0, &writeRange, reinterpret_cast<void**>(&m_pSysConstBufferDefault))))
+		{
+			m_pSysConstBufferDefault->offset.x = 0.0f;
+			m_pSysConstBufferDefault->offset.y = 0.0f;
+		}
+		else
+		{
+			__debugbreak();
+			return FALSE;
+		}
+		// 여기서 Unmap 을 하지 않음. 
+		// 계속 CPU가 m_pSysConstBufferDefault 에다가 내용을 써넣어야 하기 때문에 매번 Unmap을 하는것은 손해임.
 	}
 
 
@@ -154,11 +194,12 @@ BOOL BasicMeshObject::InitRootSignature()
 {
 	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
 
-	CD3DX12_DESCRIPTOR_RANGE ranges[1] = {};
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	CD3DX12_DESCRIPTOR_RANGE ranges[2] = {};
+	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-	rootParameters[0].InitAsDescriptorTable(_countof(rootParameters), ranges, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);
 
 	// Default Sampler
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -272,10 +313,10 @@ BOOL BasicMeshObject::CreateDescriptorTable()
 	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
 
 	// 렌더링 시에 Descriptor Table 로 사용할 Descriptor Heap
-	// 현재는 텍스쳐(SRV) 1개만 사용
+	// 이번에는 | SRV | CBV | 로 2개가 들어감
 	
 	// SRV 가 Descriptor 에서 차지하는 크기를 가져옴
-	// 여러 리소스가 바인딩되면 이 사이즈로 Offset 을 옮기며 여러 리소스를 사용하게 됨
+	// enum 을 보면 CBV 와 SRV 가 차지하는 크기가 동일한 것으로 보임
 	m_srvDescriptorSize = pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Descriptor Heap 생성

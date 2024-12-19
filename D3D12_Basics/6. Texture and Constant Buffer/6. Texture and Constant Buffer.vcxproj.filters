@@ -108,7 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="5. Texture 사용.md" />
+    <None Include="6. Constant Buffer 및 Texutre 사용.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shaders.hlsl">

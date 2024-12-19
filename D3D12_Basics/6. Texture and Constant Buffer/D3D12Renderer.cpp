@@ -260,7 +260,7 @@ void D3D12Renderer::Present()
 {
 	// Back buffer 甫 Primary buffer 肺 傈价
 
-	UINT m_SyncInterval = 1;	// V-Sync ON, 0老 版快 OFF
+	UINT m_SyncInterval = 0;	// V-Sync ON, 0老 版快 OFF
 
 	UINT uiSyncInterval = m_SyncInterval;
 	UINT uiPresentFlags = 0;
@@ -427,8 +427,9 @@ void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 	pMeshObj.reset();
 }
 
-void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle)
+void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset)
 {
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
-	pMeshObj->Draw(m_pCommandList.Get());
+	XMFLOAT2 pos = { x_offset, y_offset };
+	pMeshObj->Draw(m_pCommandList.Get(), pos);
 }

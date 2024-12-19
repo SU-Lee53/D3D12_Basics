@@ -9,6 +9,7 @@ struct BasicVertex
 	XMFLOAT4 color;
 	XMFLOAT2 texCoord;
 };
+
 union RGBA
 {
 	struct
@@ -19,4 +20,9 @@ union RGBA
 		BYTE	a;
 	};
 	BYTE		bColorFactor[4];
+};
+
+struct CONSTANT_BUFFER_DEFAULT
+{
+	XMFLOAT4	offset;
 };

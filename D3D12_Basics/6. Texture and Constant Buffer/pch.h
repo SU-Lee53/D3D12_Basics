@@ -12,6 +12,7 @@
 #include <dwrite.h>
 #include <d2d1_3.h>
 #include <d3dx12.h>
+#include <DirectXMath.h>
 
 // Windows Header Files
 #include <windows.h>
@@ -28,6 +29,9 @@ using namespace Microsoft::WRL;
 // STL
 #include <array>
 #include <memory>
+
+#include "typedef.h"
+#include "D3DUtil.h"
 
 // Debugs
 #ifdef _DEBUG

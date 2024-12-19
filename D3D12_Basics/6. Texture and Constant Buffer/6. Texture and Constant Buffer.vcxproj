@@ -167,7 +167,7 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="5. Texture 사용.md" />
+    <None Include="6. Constant Buffer 및 Texutre 사용.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

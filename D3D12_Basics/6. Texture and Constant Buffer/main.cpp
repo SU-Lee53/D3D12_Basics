@@ -51,6 +51,9 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 // D3D12Renderer
 std::shared_ptr<D3D12Renderer> g_pRenderer = nullptr;
 std::shared_ptr<void> g_pMeshObj = nullptr;
+float g_fOffsetX = 0.0f;
+float g_fOffsetY = 0.0f;
+float g_fSpeed = 0.01f;
 
 ULONGLONG g_PrvFrameCheckTick = 0;
 ULONGLONG g_PrvUpdateTick = 0;
@@ -155,7 +158,7 @@ void RunGame()
     }
 
     // Render
-    g_pRenderer->RenderMeshObject(g_pMeshObj);
+    g_pRenderer->RenderMeshObject(g_pMeshObj, g_fOffsetX, g_fOffsetY);
 
     // EndRender
     g_pRenderer->EndRender();
@@ -178,7 +181,15 @@ void RunGame()
 
 void Update()
 {
-
+    g_fOffsetX += g_fSpeed;
+    if (g_fOffsetX > 0.75f)
+    {
+        g_fSpeed *= -1.0f;
+    }
+    if (g_fOffsetX < -0.75f)
+    {
+        g_fSpeed *= -1.0f;
+    }
 }
 
 //

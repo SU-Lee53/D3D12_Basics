@@ -29,7 +29,7 @@ private:
 public:
 	std::shared_ptr<void> CreateBasicMeshObject();
 	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
-	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle);
+	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset);
 
 
 public:

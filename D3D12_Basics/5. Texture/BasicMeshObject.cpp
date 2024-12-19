@@ -132,7 +132,6 @@ BOOL BasicMeshObject::CreateMesh()
 		pD3DDevice->CreateShaderResourceView(m_pTexResource.Get(), &SRVDesc, srv);
 	}
 
-
 	bResult = TRUE;
 
 	return bResult;
@@ -158,7 +157,7 @@ BOOL BasicMeshObject::InitRootSignature()
 	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-	rootParameters[0].InitAsDescriptorTable(_countof(rootParameters), ranges, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);
 
 	// Default Sampler
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
