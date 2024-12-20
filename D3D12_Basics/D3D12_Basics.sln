@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6. Texture and Constant Buf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7. DynamicDescriptorTable_&_DescriptorHeap", "7. DynamicDescriptorTable_&_DescriptorHeap\7. DynamicDescriptorTable_&_DescriptorHeap.vcxproj", "{29A073F9-C198-412E-B1AD-2B92BB67FD57}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "8. DynamicDescriptorAllocator", "8. DynamicDescriptorAllocator\8. DynamicDescriptorAllocator.vcxproj", "{829CCB9A-0886-4DBD-820A-B34F9848E235}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +93,14 @@ Global
 		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x64.Build.0 = Release|x64
 		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x86.ActiveCfg = Release|Win32
 		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x86.Build.0 = Release|Win32
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Debug|x64.ActiveCfg = Debug|x64
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Debug|x64.Build.0 = Debug|x64
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Debug|x86.ActiveCfg = Debug|Win32
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Debug|x86.Build.0 = Debug|Win32
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Release|x64.ActiveCfg = Release|x64
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Release|x64.Build.0 = Release|x64
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Release|x86.ActiveCfg = Release|Win32
+		{829CCB9A-0886-4DBD-820A-B34F9848E235}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

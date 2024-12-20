@@ -68,7 +68,7 @@ private:
 	HANDLE							m_hFenceEvent = nullptr;
 	UINT							m_uiRTVDescriptorSize = 0;
 	UINT							m_uiRenderTargetIndex = 0;
-	DWORD							_dwCurContextIndex = 0;
+	DWORD							m_dwCurContextIndex = 0;
 	std::shared_ptr<D3D12ResourceManager> m_pResourceManager = nullptr;
 
 };

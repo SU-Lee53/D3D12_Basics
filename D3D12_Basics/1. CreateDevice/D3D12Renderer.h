@@ -48,7 +48,7 @@ private:
 	HANDLE							m_hFenceEvent = nullptr;
 	UINT							m_uiRTVDescriptorSize = 0;
 	UINT							m_uiRenderTargetIndex = 0;
-	DWORD							_dwCurContextIndex = 0;
+	DWORD							m_dwCurContextIndex = 0;
 
 };
 

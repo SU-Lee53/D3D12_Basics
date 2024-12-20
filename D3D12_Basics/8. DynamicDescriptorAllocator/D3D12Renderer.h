@@ -5,10 +5,12 @@ const UINT SWAP_CHAIN_FRAME_COUNT = 2;
 class D3D12ResourceManager;
 class DescriptorPool;
 class SimpleConstantBufferPool;
+class SingleDescriptorAllocator;
 
 class D3D12Renderer : public std::enable_shared_from_this<D3D12Renderer>
 {
 	const static UINT MAX_DRAW_COUNT_PER_FRAME = 256;
+	static const UINT MAX_DESCRIPTOR_COUNT = 4096;
 
 public:
 	D3D12Renderer();
@@ -34,7 +36,11 @@ public:
 	std::shared_ptr<void> CreateBasicMeshObject();
 	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
 	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset);
+	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset, std::shared_ptr<void>& pTexHandle);
 
+	std::shared_ptr<void> CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b);
+	// 종료시가 아닌 런타임에 임의로 텍스쳐를 제거할 수도 있음
+	void DeleteTexture(std::shared_ptr<void>& pHandle);
 
 public:
 	// Getter
@@ -82,5 +88,6 @@ private:
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
 	std::shared_ptr<DescriptorPool>				m_pDescriptorPool = nullptr;
 	std::shared_ptr<SimpleConstantBufferPool>	m_pConstantBufferPool = nullptr;
+	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;
 };
 
