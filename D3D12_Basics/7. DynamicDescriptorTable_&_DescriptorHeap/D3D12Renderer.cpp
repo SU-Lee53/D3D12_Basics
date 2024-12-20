@@ -3,6 +3,8 @@
 #include "D3D12ResourceManager.h"
 #include "BasicMeshObject.h"
 #include "D3DUtil.h"
+#include "DescriptorPool.h"
+#include "SimpleConstantBufferPool.h"
 
 D3D12Renderer::D3D12Renderer()
 {
@@ -211,6 +213,13 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	m_pResourceManager = std::make_shared<D3D12ResourceManager>();
 	m_pResourceManager->Initialize(m_pD3DDevice);
 
+	m_pDescriptorPool = std::make_shared<DescriptorPool>();
+	m_pDescriptorPool->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::DESCRIPTOR_COUNT_FOR_DRAW);
+
+	m_pConstantBufferPool = std::make_shared<SimpleConstantBufferPool>();
+	m_pConstantBufferPool->Initialize(m_pD3DDevice, D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
+
+
 	bResult = TRUE;
 
 	return bResult;
@@ -282,6 +291,10 @@ void D3D12Renderer::Present()
 
 	Fence();
 	WaitForFenceValue();
+
+	// 강의에 설명이 없는데 안하면 터짐
+	m_pConstantBufferPool->Reset();
+	m_pDescriptorPool->Reset();
 
 }
 

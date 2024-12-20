@@ -1,7 +1,4 @@
 
-Texture2D texDiffuse : register(t0);
-SamplerState samplerDiffuse : register(s0);
-
 cbuffer CONSTANT_BUFFER_DEFAULT : register(b0)
 {
     float4 g_Offset;
@@ -36,6 +33,5 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float4 texColor = texDiffuse.Sample(samplerDiffuse, input.TexCoord);
-    return texColor * input.color;
+    return input.color;
 }

@@ -33,27 +33,23 @@
     <Filter Include="Renderer\BasicMeshObject">
       <UniqueIdentifier>{d8016125-e3f0-4fed-aaeb-b663e1f318d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Headers\헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Headers\pch">
       <UniqueIdentifier>{2a6e78fd-befa-46c9-ac65-57420318dbff}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\Shader">
       <UniqueIdentifier>{a5485d37-dd38-4ecc-8205-075e79499204}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\ConstantBufferPool">
+      <UniqueIdentifier>{1c5accd4-824e-455a-9836-aaf13098045e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\DescriptorPool">
+      <UniqueIdentifier>{e27bd549-579a-4bd7-8193-dc148b7e4277}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Etc.">
+      <UniqueIdentifier>{ed937858-01e7-4429-b265-272b642d73a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>Headers\헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Headers\헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Headers\헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="BasicMeshObject.h">
       <Filter>Renderer\BasicMeshObject</Filter>
     </ClInclude>
@@ -71,6 +67,21 @@
     </ClInclude>
     <ClInclude Include="Typedef.h">
       <Filter>Typedef</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleConstantBufferPool.h">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorPool.h">
+      <Filter>Renderer\DescriptorPool</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Headers\Etc.</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Headers\Etc.</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Headers\Etc.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +103,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Entry</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleConstantBufferPool.cpp">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorPool.cpp">
+      <Filter>Renderer\DescriptorPool</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="5. Texture.rc">
@@ -108,7 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="6. Constant Buffer 및 Texutre 사용.md" />
+    <None Include="7. Dynamic Descriptor Table과 Descriptor Pool의 구현 및 사용.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shaders.hlsl">

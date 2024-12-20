@@ -7,7 +7,7 @@ public:
 	~D3D12ResourceManager();
 
 public:
-	BOOL Initialize(ComPtr<ID3D12Device5> pD3DDevice);
+	BOOL Initialize(ComPtr<ID3D12Device5>& pD3DDevice);
 	HRESULT CreateVertexBuffer(UINT SizePerVertex, DWORD dwVertexNum, D3D12_VERTEX_BUFFER_VIEW& refOutVertexBufferView, ComPtr<ID3D12Resource>& prefOutBuffer, void* pInitData);
 	HRESULT CreateIndexBuffer(DWORD dwIndexNum, D3D12_INDEX_BUFFER_VIEW& refOutIndexBufferView, ComPtr<ID3D12Resource>& prefOutBuffer, void* pInitData);
 

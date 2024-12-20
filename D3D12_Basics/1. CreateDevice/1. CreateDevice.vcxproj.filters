@@ -77,5 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="1. CreateDevice.md" />
   </ItemGroup>
 </Project>

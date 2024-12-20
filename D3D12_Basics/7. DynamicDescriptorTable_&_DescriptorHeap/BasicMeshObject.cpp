@@ -5,6 +5,8 @@
 #include "D3D12Renderer.h"
 #include "D3D12ResourceManager.h"
 #include "Typedef.h"
+#include "DescriptorPool.h"
+#include "SimpleConstantBufferPool.h"
 
 ComPtr<ID3D12RootSignature>	BasicMeshObject::m_pRootSignature = nullptr;
 ComPtr<ID3D12PipelineState>	BasicMeshObject::m_pPipelineState = nullptr;
@@ -29,16 +31,47 @@ BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
 
 void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos)
 {
-	m_pSysConstBufferDefault->offset.x = pPos.x;
-	m_pSysConstBufferDefault->offset.y = pPos.y;
+	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
+	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
+	ComPtr<ID3D12Device5>& prefD3DDevice = m_pRenderer->GetDevice();
+	UINT srvDescriptorSize = m_pRenderer->GetSrvDescriptorSize();
+	std::shared_ptr<DescriptorPool>& refDescriptorPool = m_pRenderer->GetDescriptorPool();
+	ComPtr<ID3D12DescriptorHeap>& refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
+	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer->GetConstantBufferPool();
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
+
+	if (!refDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, DESCRIPTOR_COUNT_FOR_DRAW))
+	{
+		__debugbreak();
+		return;
+	}
+
+	CB_CONTAINER* pCB = refConstantBufferPool->Alloc();
+	if (!pCB)
+	{
+		__debugbreak();
+		return;
+	}
+
+	CONSTANT_BUFFER_DEFAULT* pConstantBufferDefault = (CONSTANT_BUFFER_DEFAULT*)pCB->pSysMemAddr;
+
+	// Constant Buffer 에 내용 기입
+	pConstantBufferDefault->offset.x = pPos.x;
+	pConstantBufferDefault->offset.y = pPos.y;
+
 
 	// Root Signature 설정
 	pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
 
 	// 텍스쳐가 있는 Descriptor Heap 을 설정
-	pCommandList->SetDescriptorHeaps(1, m_pDescriptorHeap.GetAddressOf());
+	pCommandList->SetDescriptorHeaps(1, refDescriptorHeap.GetAddressOf());
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable(m_pDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	// 이번에 사용할 constantBuffer 의 Descriptor 를 렌더링용(SHADER_VISIBLE 한) Descriptor Table 에 복사
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvDest(cpuDescriptorTable, (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_CBV, srvDescriptorSize);
+	prefD3DDevice->CopyDescriptorsSimple(1, cbvDest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
 	pCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
 
 	pCommandList->SetPipelineState(m_pPipelineState.Get());
@@ -82,97 +115,6 @@ BOOL BasicMeshObject::CreateMesh()
 		return FALSE;
 	}
 
-	// 격자 무늬 텍스쳐 생성
-	const UINT texWidth = 16;
-	const UINT texHeight = 16;
-	DXGI_FORMAT texFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-	BYTE* pImage = (BYTE*)malloc(texWidth * texHeight * 4);
-	memset(pImage, 0, texWidth * texHeight * 4);
-
-	BOOL bFirstColorIsWhite = TRUE;
-
-	for (UINT y = 0; y < texHeight; y++)
-	{
-		for (UINT x = 0; x < texWidth; x++)
-		{
-			RGBA* pDest = (RGBA*)(pImage + (x + y * texWidth) * 4);
-		
-			if ((bFirstColorIsWhite + x) % 2)
-			{
-				pDest->r = 255;
-				pDest->g = 255;
-				pDest->b = 255;
-			}
-			else
-			{
- 				pDest->r = 0;
-				pDest->g = 0;
-				pDest->b = 0;
-			}
-
-			pDest->a = 255;
-		}
-		bFirstColorIsWhite++;
-		bFirstColorIsWhite %= 2;
-	}
-	pResourceManager->CreateTexture(m_pTexResource, texWidth, texHeight, texFormat, pImage);
-
-	free(pImage);
-
-	CreateDescriptorTable();
-
-	// 텍스쳐를 위한 SRV를 생성
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-		SRVDesc.Format = texFormat;
-		SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		SRVDesc.Texture2D.MipLevels = 1;
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE srv(m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_TEX, m_srvDescriptorSize);
-		pD3DDevice->CreateShaderResourceView(m_pTexResource.Get(), &SRVDesc, srv);
-	}
-	
-	// Constant Buffer 생성
-	{
-		// Constant Buffer 는 256바이트 정렬이 되어있어야 함
-		const UINT constantBufferSize = (UINT)D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT));
-
-		if (FAILED(pD3DDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize),
-			D3D12_RESOURCE_STATE_COMMON,
-			nullptr,
-			IID_PPV_ARGS(m_pConstantBuffer.GetAddressOf()))))
-		{
-			__debugbreak();
-			return FALSE;
-		}
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		cbvDesc.BufferLocation = m_pConstantBuffer->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = constantBufferSize;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE cbv(m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_CBV, m_srvDescriptorSize);
-		pD3DDevice->CreateConstantBufferView(&cbvDesc, cbv);
-
-		CD3DX12_RANGE writeRange(0, 0);
-		if (SUCCEEDED(m_pConstantBuffer->Map(0, &writeRange, reinterpret_cast<void**>(&m_pSysConstBufferDefault))))
-		{
-			m_pSysConstBufferDefault->offset.x = 0.0f;
-			m_pSysConstBufferDefault->offset.y = 0.0f;
-		}
-		else
-		{
-			__debugbreak();
-			return FALSE;
-		}
-		// 여기서 Unmap 을 하지 않음. 
-		// 계속 CPU가 m_pSysConstBufferDefault 에다가 내용을 써넣어야 하기 때문에 매번 Unmap을 하는것은 손해임.
-	}
-
-
 	bResult = TRUE;
 
 	return bResult;
@@ -194,9 +136,9 @@ BOOL BasicMeshObject::InitRootSignature()
 {
 	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
 
-	CD3DX12_DESCRIPTOR_RANGE ranges[2] = {};
+	CD3DX12_DESCRIPTOR_RANGE ranges[1] = {};
 	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	//ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
 	rootParameters[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);

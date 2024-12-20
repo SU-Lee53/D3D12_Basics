@@ -166,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="삼각형 그리기 - VertexBuffer on GPU Memory.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shaders.hlsl" />

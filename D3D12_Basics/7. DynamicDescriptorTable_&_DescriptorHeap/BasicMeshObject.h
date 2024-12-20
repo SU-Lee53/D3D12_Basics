@@ -3,7 +3,7 @@
 enum class BASIC_MESH_DESCRIPTOR_INDEX
 {
 	BASIC_MESH_DESCRIPTOR_INDEX_CBV = 0,
-	BASIC_MESH_DESCRIPTOR_INDEX_TEX = 1,
+	//BASIC_MESH_DESCRIPTOR_INDEX_TEX = 1,
 
 	END
 };
@@ -13,6 +13,9 @@ class D3D12Renderer;
 
 class BasicMeshObject
 {
+public:
+	const static UINT DESCRIPTOR_COUNT_FOR_DRAW = (UINT)BASIC_MESH_DESCRIPTOR_INDEX::END;
+
 public:
 	BasicMeshObject();
 	~BasicMeshObject();
@@ -54,8 +57,6 @@ private:
 	// Descriptor
 	UINT m_srvDescriptorSize = 0;
 	ComPtr<ID3D12DescriptorHeap> m_pDescriptorHeap = nullptr;
-	
-	const static UINT DESCRIPTOR_COUNT_FOR_DRAW = (UINT)BASIC_MESH_DESCRIPTOR_INDEX::END;
 
 };
 

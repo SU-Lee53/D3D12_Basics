@@ -9,7 +9,7 @@ D3D12ResourceManager::~D3D12ResourceManager()
 {
 }
 
-BOOL D3D12ResourceManager::Initialize(ComPtr<ID3D12Device5> pD3DDevice)
+BOOL D3D12ResourceManager::Initialize(ComPtr<ID3D12Device5>& pD3DDevice)
 {
 	BOOL bResult = FALSE;
 
