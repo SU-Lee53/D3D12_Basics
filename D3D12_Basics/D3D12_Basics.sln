@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "5. Texture", "5. Texture\5.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6. Texture and Constant Buffer", "6. Texture and Constant Buffer\6. Texture and Constant Buffer.vcxproj", "{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7. DynamicDescriptorTable_&_DescriptorHeap", "7. DynamicDescriptorTable_&_DescriptorHeap\7. DynamicDescriptorTable_&_DescriptorHeap.vcxproj", "{29A073F9-C198-412E-B1AD-2B92BB67FD57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}.Release|x64.Build.0 = Release|x64
 		{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}.Release|x86.ActiveCfg = Release|Win32
 		{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}.Release|x86.Build.0 = Release|Win32
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Debug|x64.ActiveCfg = Debug|x64
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Debug|x64.Build.0 = Debug|x64
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Debug|x86.ActiveCfg = Debug|Win32
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Debug|x86.Build.0 = Debug|Win32
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x64.ActiveCfg = Release|x64
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x64.Build.0 = Release|x64
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x86.ActiveCfg = Release|Win32
+		{29A073F9-C198-412E-B1AD-2B92BB67FD57}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
