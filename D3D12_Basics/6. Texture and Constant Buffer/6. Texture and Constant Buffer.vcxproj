@@ -25,6 +25,7 @@
     <ProjectGuid>{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}</ProjectGuid>
     <RootNamespace>My5Texture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>06. Texture and Constant Buffer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

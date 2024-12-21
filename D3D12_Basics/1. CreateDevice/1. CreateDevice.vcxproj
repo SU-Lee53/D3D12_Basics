@@ -25,6 +25,7 @@
     <ProjectGuid>{321c1715-085a-47a9-a6c9-2f389dc60bdc}</ProjectGuid>
     <RootNamespace>My1CreateDevice</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>01. CreateDevice</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

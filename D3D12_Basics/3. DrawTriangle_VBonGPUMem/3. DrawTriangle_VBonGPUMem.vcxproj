@@ -25,6 +25,7 @@
     <ProjectGuid>{fdef95cb-98e3-4bfd-9e92-09dad6796681}</ProjectGuid>
     <RootNamespace>My3DrawTriangleVBonGPUMem</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>03. DrawTriangle_VBonGPUMem</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

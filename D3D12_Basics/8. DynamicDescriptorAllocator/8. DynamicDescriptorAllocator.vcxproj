@@ -25,6 +25,7 @@
     <ProjectGuid>{829ccb9a-0886-4dbd-820a-b34f9848e235}</ProjectGuid>
     <RootNamespace>My8DynamicDescriptorAllocator</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>08. DynamicDescriptorAllocator</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

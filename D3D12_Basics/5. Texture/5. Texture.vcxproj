@@ -25,6 +25,7 @@
     <ProjectGuid>{2953ff36-68f8-43a5-a8ec-2b16c0730344}</ProjectGuid>
     <RootNamespace>My5Texture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>05. Texture</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

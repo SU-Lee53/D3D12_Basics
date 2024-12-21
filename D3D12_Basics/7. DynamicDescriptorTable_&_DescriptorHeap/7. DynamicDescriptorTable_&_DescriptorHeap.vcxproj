@@ -25,6 +25,7 @@
     <ProjectGuid>{29A073F9-C198-412E-B1AD-2B92BB67FD57}</ProjectGuid>
     <RootNamespace>My5Texture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>07. DynamicDescriptorTable_&amp;_DescriptorHeap</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

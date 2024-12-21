@@ -3,25 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3D12_Basics", "D3D12_Basics\D3D12_Basics.vcxproj", "{5B824171-B718-4C38-9B0A-3874E625E644}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01. CreateDevice", "1. CreateDevice\1. CreateDevice.vcxproj", "{321C1715-085A-47A9-A6C9-2F389DC60BDC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1. CreateDevice", "1. CreateDevice\1. CreateDevice.vcxproj", "{321C1715-085A-47A9-A6C9-2F389DC60BDC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02. DrawTriangle_VBonSysMem", "2. DrawTriangle_VBonSysMem\2. DrawTriangle_VBonSysMem.vcxproj", "{E74D82A8-3F9A-49BF-92B5-5472087F7E7B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "2. DrawTriangle_VBonSysMem", "2. DrawTriangle_VBonSysMem\2. DrawTriangle_VBonSysMem.vcxproj", "{E74D82A8-3F9A-49BF-92B5-5472087F7E7B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03. DrawTriangle_VBonGPUMem", "3. DrawTriangle_VBonGPUMem\3. DrawTriangle_VBonGPUMem.vcxproj", "{FDEF95CB-98E3-4BFD-9E92-09DAD6796681}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3. DrawTriangle_VBonGPUMem", "3. DrawTriangle_VBonGPUMem\3. DrawTriangle_VBonGPUMem.vcxproj", "{FDEF95CB-98E3-4BFD-9E92-09DAD6796681}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "04. DrawIndexedTriangle", "4. DrawIndexedTriangle\4. DrawIndexedTriangle.vcxproj", "{7DD8AF10-35CC-49D1-8C9C-C48193E6F378}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "4. DrawIndexedTriangle", "4. DrawIndexedTriangle\4. DrawIndexedTriangle.vcxproj", "{7DD8AF10-35CC-49D1-8C9C-C48193E6F378}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "05. Texture", "5. Texture\5. Texture.vcxproj", "{2953FF36-68F8-43A5-A8EC-2B16C0730344}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "5. Texture", "5. Texture\5. Texture.vcxproj", "{2953FF36-68F8-43A5-A8EC-2B16C0730344}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "06. Texture and Constant Buffer", "6. Texture and Constant Buffer\6. Texture and Constant Buffer.vcxproj", "{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6. Texture and Constant Buffer", "6. Texture and Constant Buffer\6. Texture and Constant Buffer.vcxproj", "{FFF5ED0D-0FA2-4A10-9A6D-8CFC39B3DDD7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "07. DynamicDescriptorTable_&_DescriptorHeap", "7. DynamicDescriptorTable_&_DescriptorHeap\7. DynamicDescriptorTable_&_DescriptorHeap.vcxproj", "{29A073F9-C198-412E-B1AD-2B92BB67FD57}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7. DynamicDescriptorTable_&_DescriptorHeap", "7. DynamicDescriptorTable_&_DescriptorHeap\7. DynamicDescriptorTable_&_DescriptorHeap.vcxproj", "{29A073F9-C198-412E-B1AD-2B92BB67FD57}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "08. DynamicDescriptorAllocator", "8. DynamicDescriptorAllocator\8. DynamicDescriptorAllocator.vcxproj", "{829CCB9A-0886-4DBD-820A-B34F9848E235}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "8. DynamicDescriptorAllocator", "8. DynamicDescriptorAllocator\8. DynamicDescriptorAllocator.vcxproj", "{829CCB9A-0886-4DBD-820A-B34F9848E235}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "09. DepthStencilBuffer", "9. DepthStencilBuffer\9. DepthStencilBuffer.vcxproj", "{AE3248A7-93A0-450D-89DF-DF00C90C8E66}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "9. DepthStencilBuffer", "9. DepthStencilBuffer\9. DepthStencilBuffer.vcxproj", "{AE3248A7-93A0-450D-89DF-DF00C90C8E66}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "10. Load_Textutre_With_DirectXTex", "10. Load_Textutre_With_DirectXTex\10. Load_Textutre_With_DirectXTex.vcxproj", "{423AE64A-93CE-492D-B87D-6CCEA8422BB4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +31,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Debug|x64.ActiveCfg = Debug|x64
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Debug|x64.Build.0 = Debug|x64
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Debug|x86.ActiveCfg = Debug|Win32
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Debug|x86.Build.0 = Debug|Win32
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Release|x64.ActiveCfg = Release|x64
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Release|x64.Build.0 = Release|x64
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Release|x86.ActiveCfg = Release|Win32
-		{5B824171-B718-4C38-9B0A-3874E625E644}.Release|x86.Build.0 = Release|Win32
 		{321C1715-085A-47A9-A6C9-2F389DC60BDC}.Debug|x64.ActiveCfg = Debug|x64
 		{321C1715-085A-47A9-A6C9-2F389DC60BDC}.Debug|x64.Build.0 = Debug|x64
 		{321C1715-085A-47A9-A6C9-2F389DC60BDC}.Debug|x86.ActiveCfg = Debug|Win32
@@ -111,6 +103,14 @@ Global
 		{AE3248A7-93A0-450D-89DF-DF00C90C8E66}.Release|x64.Build.0 = Release|x64
 		{AE3248A7-93A0-450D-89DF-DF00C90C8E66}.Release|x86.ActiveCfg = Release|Win32
 		{AE3248A7-93A0-450D-89DF-DF00C90C8E66}.Release|x86.Build.0 = Release|Win32
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Debug|x64.ActiveCfg = Debug|x64
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Debug|x64.Build.0 = Debug|x64
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Debug|x86.ActiveCfg = Debug|Win32
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Debug|x86.Build.0 = Debug|Win32
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Release|x64.ActiveCfg = Release|x64
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Release|x64.Build.0 = Release|x64
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Release|x86.ActiveCfg = Release|Win32
+		{423AE64A-93CE-492D-B87D-6CCEA8422BB4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
