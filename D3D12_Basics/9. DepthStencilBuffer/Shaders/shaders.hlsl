@@ -4,7 +4,9 @@ SamplerState samplerDiffuse : register(s0);
 
 cbuffer CONSTANT_BUFFER_DEFAULT : register(b0)
 {
-    float4 g_Offset;
+    matrix g_matWorld;
+    matrix g_matView;
+    matrix g_matProj;
 };
 
 struct VSInput
@@ -23,10 +25,14 @@ struct PSInput
 
 PSInput VSMain(VSInput input)
 {
-    PSInput result = (PSInput)0;
+    PSInput result = (PSInput) 0;
 
-    result.position = input.position;
-    result.position.xy += g_Offset.xy;
+    //matrix matViewProj = mul(g_matView, g_matProj);
+    //matrix matWVP = mul(g_matWorld, matViewProj);
+    
+    result.position = mul(input.position, g_matWorld);
+    result.position = mul(result.position, g_matView);
+    result.position = mul(result.position, g_matProj);
     result.TexCoord = input.TexCoord;
     result.color = input.color;
 

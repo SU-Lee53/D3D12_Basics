@@ -29,7 +29,7 @@ BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
 	return bResult;
 }
 
-void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos)
+void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld, const D3D12_CPU_DESCRIPTOR_HANDLE& srv)
 {
 	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
 	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
@@ -38,7 +38,7 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	UINT srvDescriptorSize = m_pRenderer->GetSrvDescriptorSize();
 	std::shared_ptr<DescriptorPool>& refDescriptorPool = m_pRenderer->GetDescriptorPool();
 	ComPtr<ID3D12DescriptorHeap>& refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
-	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer->GetConstantBufferPool();
+	std::shared_ptr<SimpleConstantBufferPool>& refConstantBufferPool = m_pRenderer->GetConstantBufferPool();
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
@@ -59,61 +59,8 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	CONSTANT_BUFFER_DEFAULT* pConstantBufferDefault = (CONSTANT_BUFFER_DEFAULT*)pCB->pSysMemAddr;
 
 	// Constant Buffer 에 내용 기입
-	pConstantBufferDefault->offset.x = pPos.x;
-	pConstantBufferDefault->offset.y = pPos.y;
-
-
-	// Root Signature 설정
-	pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
-
-	// 텍스쳐가 있는 Descriptor Heap 을 설정
-	pCommandList->SetDescriptorHeaps(1, refDescriptorHeap.GetAddressOf());
-
-	// 이번에 사용할 constantBuffer 의 Descriptor 를 렌더링용(SHADER_VISIBLE 한) Descriptor Table 에 복사
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvDest(cpuDescriptorTable, (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_CBV, srvDescriptorSize);
-	prefD3DDevice->CopyDescriptorsSimple(1, cbvDest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	pCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
-
-	pCommandList->SetPipelineState(m_pPipelineState.Get());
-	pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	pCommandList->IASetIndexBuffer(&m_IndexBufferView);
-	pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-}
-
-void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos, const D3D12_CPU_DESCRIPTOR_HANDLE& srv)
-{
-	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
-	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
-
-	ComPtr<ID3D12Device5>& prefD3DDevice = m_pRenderer->GetDevice();
-	UINT srvDescriptorSize = m_pRenderer->GetSrvDescriptorSize();
-	std::shared_ptr<DescriptorPool>& refDescriptorPool = m_pRenderer->GetDescriptorPool();
-	ComPtr<ID3D12DescriptorHeap>& refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
-	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer->GetConstantBufferPool();
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
-
-	if (!refDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, DESCRIPTOR_COUNT_FOR_DRAW))
-	{
-		__debugbreak();
-		return;
-	}
-
-	CB_CONTAINER* pCB = refConstantBufferPool->Alloc();
-	if (!pCB)
-	{
-		__debugbreak();
-		return;
-	}
-
-	CONSTANT_BUFFER_DEFAULT* pConstantBufferDefault = (CONSTANT_BUFFER_DEFAULT*)pCB->pSysMemAddr;
-
-	// Constant Buffer 에 내용 기입
-	pConstantBufferDefault->offset.x = pPos.x;
-	pConstantBufferDefault->offset.y = pPos.y;
+	m_pRenderer->GetViewProjMatrix(pConstantBufferDefault->matView, pConstantBufferDefault->matProj);
+	pConstantBufferDefault->matWorld = XMMatrixTranspose(pMatWorld);
 
 
 	// Root Signature 설정
@@ -294,12 +241,16 @@ BOOL BasicMeshObject::InitPipelineState()
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPixelShader->GetBufferPointer(), pPixelShader->GetBufferSize());
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	//psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;	// 강의에 없는데 회전된 뒷면도 보려면 설정해야함
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 	if (FAILED(pD3DDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pPipelineState.GetAddressOf()))))
 	{

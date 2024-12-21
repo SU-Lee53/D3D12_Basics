@@ -98,6 +98,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 		{
 			if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3DDevice.GetAddressOf()))))
 			{
+				m_FeatureLevel = featureLevels[featureLevelIndex];
 				break;
 			}
 		}
@@ -135,7 +136,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	}
 
 	// 2-2. Create Descripter Heap
-	CreateDescripterHeap();
+	CreateDescripterHeapForRTV();
 
 	// 2-3. SwapChain
 	RECT rect;
@@ -206,6 +207,10 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	}
 	m_uiSRVDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+	// Depth Stencil Buffer 생성
+	CreateDescripterHeapForDSV();
+	CreateDepthStencil(m_dwWidth, m_dwHeight);
+
 	// 2-5. Command List
 	CreateCommandList();
 
@@ -224,6 +229,8 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	m_pSingleDescriptorAllocator = std::make_shared<SingleDescriptorAllocator>();
 	m_pSingleDescriptorAllocator->Initialize(m_pD3DDevice, MAX_DESCRIPTOR_COUNT, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
+	// 카메라 생성
+	InitCamera();
 
 	bResult = TRUE;
 
@@ -244,22 +251,26 @@ void D3D12Renderer::BeginRender()
 	}
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart(), m_uiRenderTargetIndex, m_uiRTVDescriptorSize);
+	
 	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	// 위 코드에서 l-value 에러가 발생하면 프로젝트 설정 -> C/C++ -> Launguage 에서 Conformance Mode 를 Off
 	// 생각해보면 안되는게 이해가 안되는건 아니지만 MS의 공식 샘플에서도 사용되는 방식
 	// 해당 샘플에서도 오류 발생시 위 방법을 권장함
 	// https://stackoverflow.com/questions/65315241/how-can-i-fix-requires-l-value
 
+	// DSV Heap 의 선두번지 가져옴
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_pDSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// 커맨드 기록
 	XMFLOAT3 color;
 	XMStoreFloat3(&color, DirectX::Colors::DarkKhaki);
-	const float BackColor[] = { 0.f,0.f,1.f,1.f };
+	//const float BackColor[] = { 0.f,0.f,1.f,1.f };
 	m_pCommandList->ClearRenderTargetView(rtvHandle, (float*)&color, 0, nullptr);
+	m_pCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);	// Depth 클리어
 
 	m_pCommandList->RSSetViewports(1, &m_ViewPort);
 	m_pCommandList->RSSetScissorRects(1, &m_ScissorRect);
-	m_pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	m_pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 }
 
 void D3D12Renderer::EndRender()
@@ -353,7 +364,7 @@ BOOL D3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBuffer
 	return TRUE;
 }
 
-BOOL D3D12Renderer::CreateDescripterHeap()
+BOOL D3D12Renderer::CreateDescripterHeapForRTV()
 {
 	// 렌더 타겟용 디스크립터 힙
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -371,6 +382,29 @@ BOOL D3D12Renderer::CreateDescripterHeap()
 	m_uiRTVDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);	// 32 in this system
 
 	return TRUE;
+}
+
+BOOL D3D12Renderer::CreateDescripterHeapForDSV()
+{
+	BOOL bResult = FALSE;
+
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	HRESULT hr = m_pD3DDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(m_pDSVHeap.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		__debugbreak();
+		return bResult;
+	}
+
+	m_uiDSVDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	bResult = TRUE;
+
+	return bResult;
 }
 
 BOOL D3D12Renderer::CreateCommandList()
@@ -412,6 +446,74 @@ BOOL D3D12Renderer::CreateFence()
 	return TRUE;
 }
 
+BOOL D3D12Renderer::CreateDepthStencil(UINT width, UINT height)
+{
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	// clear value 를 지정하여 약간의 최적화에 도움을 줄 수 있음
+	D3D12_CLEAR_VALUE depthOptimizeClearValue = {};
+	depthOptimizeClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthOptimizeClearValue.DepthStencil.Depth = 1.f;
+	depthOptimizeClearValue.DepthStencil.Stencil = 0;
+
+	D3D12_RESOURCE_DESC depthDesc;
+	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthDesc.Alignment = 0;
+	depthDesc.Width = width;
+	depthDesc.Height = height;
+	depthDesc.DepthOrArraySize = 1;
+	depthDesc.MipLevels = 1;
+	depthDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	if (FAILED(m_pD3DDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&depthDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthOptimizeClearValue,
+		IID_PPV_ARGS(m_pDepthStencil.GetAddressOf()))))
+	{
+		__debugbreak();
+		return FALSE;
+	}
+
+	m_pDepthStencil->SetName(L"D3D12Renderer::m_pDepthStencil");	// 디버그용 이름 설정
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_pDSVHeap->GetCPUDescriptorHandleForHeapStart());
+	m_pD3DDevice->CreateDepthStencilView(m_pDepthStencil.Get(), &depthStencilDesc, dsvHandle);
+
+	return TRUE;
+}
+
+void D3D12Renderer::InitCamera()
+{
+	// 카메라 파라미터 EYE, AT, UP
+	XMVECTOR eyePos = XMVectorSet(0.f, 0.f, -1.f, 1.f);	// 카메라 위치
+	XMVECTOR eyeDir = XMVectorSet(0.f, 0.f, 1.f, 0.f);	// 카메라 방향(정면)
+	XMVECTOR upDir = XMVectorSet(0.f, 1.f, 0.f, 0.f);	// 카메라 위쪽 방향
+
+	// View
+	m_matView = XMMatrixLookAtLH(eyePos, eyeDir, upDir);
+
+	// 시야각 fovY (라디안)
+	float fovY = XM_PIDIV4;	// 90도(위아래 45도)
+
+	// Projection
+	float fAspectRatio = (float)m_dwWidth / (float)m_dwHeight;
+	float fNear = 0.1f;
+	float fFar = 1000.f;
+
+	m_matProj = XMMatrixPerspectiveFovLH(fovY, fAspectRatio, fNear, fFar);
+
+}
+
 UINT64 D3D12Renderer::Fence()
 {
 	// 제출한 작업에 Fence 를 걸어 끝났는지 확인 가능
@@ -447,14 +549,7 @@ void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 	pMeshObj.reset();
 }
 
-void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset)
-{
-	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
-	XMFLOAT2 pos = { x_offset, y_offset };
-	pMeshObj->Draw(m_pCommandList.Get(), pos);
-}
-
-void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset, std::shared_ptr<void>& pTexHandle)
+void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld, std::shared_ptr<void>& pTexHandle)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
@@ -463,8 +558,7 @@ void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, floa
 		srv = std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle)->srv;
 	}
 
-	XMFLOAT2 pos = { x_offset, y_offset };
-	pMeshObj->Draw(m_pCommandList, pos, srv);
+	pMeshObj->Draw(m_pCommandList, refMatWorld, srv);
 }
 
 std::shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)

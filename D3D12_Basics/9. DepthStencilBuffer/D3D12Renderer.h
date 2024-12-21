@@ -24,9 +24,14 @@ public:
 	BOOL UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight);
 
 private:
-	BOOL CreateDescripterHeap();
+	BOOL CreateDescripterHeapForRTV();
+	BOOL CreateDescripterHeapForDSV();
+
 	BOOL CreateCommandList();
 	BOOL CreateFence();
+	BOOL CreateDepthStencil(UINT width, UINT height);
+
+	void InitCamera();
 
 private:
 	UINT64 Fence();
@@ -35,8 +40,8 @@ private:
 public:
 	std::shared_ptr<void> CreateBasicMeshObject();
 	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
-	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset);
-	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, float x_offset, float y_offset, std::shared_ptr<void>& pTexHandle);
+
+	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld, std::shared_ptr<void>& pTexHandle);
 
 	std::shared_ptr<void> CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b);
 	// 종료시가 아닌 런타임에 임의로 텍스쳐를 제거할 수도 있음
@@ -49,6 +54,12 @@ public:
 	std::shared_ptr<DescriptorPool>& GetDescriptorPool() { return m_pDescriptorPool; }
 	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool() { return m_pConstantBufferPool; }
 	UINT& GetSrvDescriptorSize() { return m_uiSRVDescriptorSize; }
+
+	void GetViewProjMatrix(XMMATRIX& refOutMatView, XMMATRIX& refOutMatProj)
+	{
+		refOutMatView = XMMatrixTranspose(m_matView);
+		refOutMatProj = XMMatrixTranspose(m_matProj);
+	}
 
 private:
 	HWND m_hWnd = nullptr;
@@ -74,6 +85,7 @@ private:
 
 	// Resources
 	std::array<ComPtr<ID3D12Resource>, SWAP_CHAIN_FRAME_COUNT> m_pRenderTargets;
+	ComPtr<ID3D12Resource>			m_pDepthStencil = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pRTVHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pDSVHeap = nullptr;	// 아직 미사용
 	ComPtr<ID3D12DescriptorHeap>	m_pSRVHeap = nullptr;
@@ -84,6 +96,9 @@ private:
 	UINT							m_uiDSVDescriptorSize = 0;	// 아직 미사용
 	UINT							m_uiRenderTargetIndex = 0;
 	DWORD							m_dwCurContextIndex = 0;
+
+	XMMATRIX m_matView = {};
+	XMMATRIX m_matProj = {};
 
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
 	std::shared_ptr<DescriptorPool>				m_pDescriptorPool = nullptr;

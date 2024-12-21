@@ -23,6 +23,7 @@ public:
 	BOOL Initialize(std::shared_ptr<D3D12Renderer> pRenderer);
 	void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos);
 	void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMFLOAT2& pPos, const D3D12_CPU_DESCRIPTOR_HANDLE& srv);
+	void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld, const D3D12_CPU_DESCRIPTOR_HANDLE& srv);
 	BOOL CreateMesh();
 
 private:

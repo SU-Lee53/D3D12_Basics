@@ -22,9 +22,16 @@ union RGBA
 	BYTE		bColorFactor[4];
 };
 
+//struct CONSTANT_BUFFER_DEFAULT
+//{
+//	XMFLOAT4	offset;
+//};
+
 struct CONSTANT_BUFFER_DEFAULT
 {
-	XMFLOAT4	offset;
+	XMMATRIX matWorld;
+	XMMATRIX matView;
+	XMMATRIX matProj;
 };
 
 struct TEXTURE_HANDLE

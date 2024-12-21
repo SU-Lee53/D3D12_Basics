@@ -23,7 +23,7 @@ struct PSInput
 
 PSInput VSMain(VSInput input)
 {
-    PSInput result = (PSInput)0;
+    PSInput result = (PSInput) 0;
 
     result.position = input.position;
     result.position.xy += g_Offset.xy;
