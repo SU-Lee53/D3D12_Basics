@@ -13,7 +13,14 @@ D3D12Renderer::D3D12Renderer()
 
 D3D12Renderer::~D3D12Renderer()
 {
-	WaitForFenceValue();
+	// 현재 진행중인 그래픽 커맨드들이 모두 끝날때까지 잠깐 대기
+	Fence();
+
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
 	// ComPtr을 사용하므로 별도의 CleanUp 은 필요없을것으로 생각됨
 }
 
@@ -99,6 +106,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 			if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), featureLevels[featureLevelIndex], IID_PPV_ARGS(m_pD3DDevice.GetAddressOf()))))
 			{
 				m_FeatureLevel = featureLevels[featureLevelIndex];
+				pAdapter->GetDesc1(&m_AdapterDesc);
 				break;
 			}
 		}
@@ -220,12 +228,14 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	m_pResourceManager = std::make_shared<D3D12ResourceManager>();
 	m_pResourceManager->Initialize(m_pD3DDevice);
 
-	m_pDescriptorPool = std::make_shared<DescriptorPool>();
-	m_pDescriptorPool->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::DESCRIPTOR_COUNT_FOR_DRAW);
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		m_pDescriptorPools[i] = std::make_shared<DescriptorPool>();
+		m_pDescriptorPools[i]->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::DESCRIPTOR_COUNT_FOR_DRAW);
 
-	m_pConstantBufferPool = std::make_shared<SimpleConstantBufferPool>();
-	m_pConstantBufferPool->Initialize(m_pD3DDevice, D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
-
+		m_pConstantBufferPools[i] = std::make_shared<SimpleConstantBufferPool>();
+		m_pConstantBufferPools[i]->Initialize(m_pD3DDevice, D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
+	}
 	m_pSingleDescriptorAllocator = std::make_shared<SingleDescriptorAllocator>();
 	m_pSingleDescriptorAllocator->Initialize(m_pD3DDevice, MAX_DESCRIPTOR_COUNT, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
@@ -240,19 +250,22 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 void D3D12Renderer::BeginRender()
 {
 	// 화면 클리어
-	if (FAILED(m_pCommandAllocator->Reset()))
+	ComPtr<ID3D12CommandAllocator> pCommandAllocator = m_pCommandAllocators[m_dwCurContextIndex];
+	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
+
+	if (FAILED(pCommandAllocator->Reset()))
 	{
 		__debugbreak();
 	}
 
-	if (FAILED(m_pCommandList->Reset(m_pCommandAllocator.Get(), nullptr)))
+	if (FAILED(pCommandList->Reset(pCommandAllocator.Get(), nullptr)))
 	{
 		__debugbreak();
 	}
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart(), m_uiRenderTargetIndex, m_uiRTVDescriptorSize);
 	
-	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	// 위 코드에서 l-value 에러가 발생하면 프로젝트 설정 -> C/C++ -> Launguage 에서 Conformance Mode 를 Off
 	// 생각해보면 안되는게 이해가 안되는건 아니지만 MS의 공식 샘플에서도 사용되는 방식
 	// 해당 샘플에서도 오류 발생시 위 방법을 권장함
@@ -265,26 +278,30 @@ void D3D12Renderer::BeginRender()
 	XMFLOAT3 color;
 	XMStoreFloat3(&color, DirectX::Colors::DarkKhaki);
 	//const float BackColor[] = { 0.f,0.f,1.f,1.f };
-	m_pCommandList->ClearRenderTargetView(rtvHandle, (float*)&color, 0, nullptr);
-	m_pCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);	// Depth 클리어
+	pCommandList->ClearRenderTargetView(rtvHandle, (float*)&color, 0, nullptr);
+	pCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);	// Depth 클리어
 
-	m_pCommandList->RSSetViewports(1, &m_ViewPort);
-	m_pCommandList->RSSetScissorRects(1, &m_ScissorRect);
-	m_pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	pCommandList->RSSetViewports(1, &m_ViewPort);
+	pCommandList->RSSetScissorRects(1, &m_ScissorRect);
+	pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 }
 
 void D3D12Renderer::EndRender()
 {
-	// 지오메트리 렌더링
-	m_pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-	m_pCommandList->Close();
+	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
 
-	ComPtr<ID3D12CommandList> ppCommandLists[] = { m_pCommandList };
+	// 지오메트리 렌더링
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	pCommandList->Close();
+
+	ComPtr<ID3D12CommandList> ppCommandLists[] = { pCommandList };
 	m_pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists->GetAddressOf());
 }
 
 void D3D12Renderer::Present()
 {
+	Fence();
+
 	// Back buffer 를 Primary buffer 로 전송
 
 	UINT m_SyncInterval = 0;	// V-Sync ON, 0일 경우 OFF
@@ -307,13 +324,14 @@ void D3D12Renderer::Present()
 
 	m_uiRenderTargetIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 
-	Fence();
-	WaitForFenceValue();
+	// 비동기 렌더링을 위해 다음 프레임을 준비
+	DWORD dwNextCondextIndex = (m_dwCurContextIndex + 1) % MAX_PENDING_FRAME_COUNT;
+	WaitForFenceValue(m_ui64LastFenceValues[dwNextCondextIndex]);
 
 	// 강의에 설명이 없는데 안하면 터짐
-	m_pConstantBufferPool->Reset();
-	m_pDescriptorPool->Reset();
-
+	m_pConstantBufferPools[dwNextCondextIndex]->Reset();
+	m_pDescriptorPools[dwNextCondextIndex]->Reset();
+	m_dwCurContextIndex = dwNextCondextIndex;
 }
 
 BOOL D3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight)
@@ -325,6 +343,14 @@ BOOL D3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBuffer
 
 	if (m_dwWidth == dwBackBufferWidth && m_dwHeight == dwBackBufferHeight)
 		return FALSE;
+
+	// 현재 진행중인 그래픽 커맨드들이 모두 끝날때까지 잠깐 대기
+	Fence();
+
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
 
 	DXGI_SWAP_CHAIN_DESC1 desc;
 	if (FAILED(m_pSwapChain->GetDesc1(&desc)))
@@ -410,21 +436,25 @@ BOOL D3D12Renderer::CreateDescripterHeapForDSV()
 BOOL D3D12Renderer::CreateCommandList()
 {
 	HRESULT hr;
-	hr = m_pD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocator.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		__debugbreak();
-		return FALSE;
-	}
 
-	hr = m_pD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_pCommandList.GetAddressOf()));
-	if (FAILED(hr))
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
 	{
-		__debugbreak();
-		return FALSE;
-	}
+		hr = m_pD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCommandAllocators[i].GetAddressOf()));
+		if (FAILED(hr))
+		{
+			__debugbreak();
+			return FALSE;
+		}
 
-	m_pCommandList->Close();
+		hr = m_pD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_pCommandAllocators[i].Get(), nullptr, IID_PPV_ARGS(m_pCommandLists[i].GetAddressOf()));
+		if (FAILED(hr))
+		{
+			__debugbreak();
+			return FALSE;
+		}
+
+		m_pCommandLists[i]->Close();
+	}
 
 	return TRUE;
 }
@@ -519,14 +549,13 @@ UINT64 D3D12Renderer::Fence()
 	// 제출한 작업에 Fence 를 걸어 끝났는지 확인 가능
 	m_ui64FenceValue++;
 	m_pCommandQueue->Signal(m_pFence.Get(), m_ui64FenceValue);
+	m_ui64LastFenceValues[m_dwCurContextIndex] = m_ui64FenceValue;
 	return m_ui64FenceValue;
 }
 
-void D3D12Renderer::WaitForFenceValue()
+void D3D12Renderer::WaitForFenceValue(UINT64 ExpectedFenceValue)
 {
-	const UINT64 ExpectedFenceValue = m_ui64FenceValue;
-
-	// 이전 프레임의 작업이 끝날때까지 대기함
+	// 원하는 프레임의 작업이 끝날때까지 대기함
 	if (m_pFence->GetCompletedValue() < ExpectedFenceValue)
 	{
 		m_pFence->SetEventOnCompletion(ExpectedFenceValue, m_hFenceEvent);
@@ -551,6 +580,8 @@ void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 
 void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld, std::shared_ptr<void>& pTexHandle)
 {
+	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
+
 	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	if (pTexHandle)
@@ -558,7 +589,7 @@ void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, cons
 		srv = std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle)->srv;
 	}
 
-	pMeshObj->Draw(m_pCommandList, refMatWorld, srv);
+	pMeshObj->Draw(pCommandList, refMatWorld, srv);
 }
 
 std::shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)

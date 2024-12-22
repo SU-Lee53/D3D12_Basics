@@ -1,6 +1,11 @@
 #pragma once
 
-const UINT SWAP_CHAIN_FRAME_COUNT = 2;
+const UINT SWAP_CHAIN_FRAME_COUNT = 3;
+
+// Pending : "보류중인" 이라는 뜻
+// 화면에 그려지는 전면버퍼 하나 빼고 나머지 후면버퍼들의 갯수를 말함
+const UINT MAX_PENDING_FRAME_COUNT = SWAP_CHAIN_FRAME_COUNT - 1;
+
 
 class D3D12ResourceManager;
 class DescriptorPool;
@@ -35,7 +40,7 @@ private:
 
 private:
 	UINT64 Fence();
-	void WaitForFenceValue();
+	void WaitForFenceValue(UINT64 ExpectedFenceValue);
 
 public:
 	std::shared_ptr<void> CreateBasicMeshObject();
@@ -52,9 +57,12 @@ public:
 	// Getter
 	ComPtr<ID3D12Device5>& GetDevice() { return m_pD3DDevice; }
 	std::shared_ptr<D3D12ResourceManager>& GetResourceManager() { return m_pResourceManager; }
-	std::shared_ptr<DescriptorPool>& GetDescriptorPool() { return m_pDescriptorPool; }
-	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool() { return m_pConstantBufferPool; }
+
+	std::shared_ptr<DescriptorPool>& GetDescriptorPool() { return m_pDescriptorPools[m_dwCurContextIndex]; }
+	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool() { return m_pConstantBufferPools[m_dwCurContextIndex]; }
+
 	UINT& GetSrvDescriptorSize() { return m_uiSRVDescriptorSize; }
+	std::shared_ptr<SingleDescriptorAllocator>& GetSingleDescriptorAllocator() { return m_pSingleDescriptorAllocator; }
 
 	void GetViewProjMatrix(XMMATRIX& refOutMatView, XMMATRIX& refOutMatProj)
 	{
@@ -68,9 +76,14 @@ private:
 	
 	// Com for Command Queue
 	ComPtr<ID3D12CommandQueue>			m_pCommandQueue = nullptr;
-	ComPtr<ID3D12CommandAllocator>		m_pCommandAllocator = nullptr;
-	ComPtr<ID3D12GraphicsCommandList>	m_pCommandList = nullptr;
-	UINT64								m_ui64FenceValue = 0;
+
+	// Resource for Rendering
+	std::array<ComPtr<ID3D12CommandAllocator>, MAX_PENDING_FRAME_COUNT>				m_pCommandAllocators = {};
+	std::array<ComPtr<ID3D12GraphicsCommandList>, MAX_PENDING_FRAME_COUNT>			m_pCommandLists = {};
+	std::array<std::shared_ptr<DescriptorPool>, MAX_PENDING_FRAME_COUNT>			m_pDescriptorPools = {};
+	std::array<std::shared_ptr<SimpleConstantBufferPool>, MAX_PENDING_FRAME_COUNT>	m_pConstantBufferPools = {};
+	std::array<UINT64, MAX_PENDING_FRAME_COUNT>										m_ui64LastFenceValues = {};
+	UINT64 m_ui64FenceValue = 0;
 
 	// DXGI
 	D3D_FEATURE_LEVEL		m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -102,8 +115,6 @@ private:
 	XMMATRIX m_matProj = {};
 
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
-	std::shared_ptr<DescriptorPool>				m_pDescriptorPool = nullptr;
-	std::shared_ptr<SimpleConstantBufferPool>	m_pConstantBufferPool = nullptr;
 	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;
 };
 

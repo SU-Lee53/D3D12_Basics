@@ -180,6 +180,7 @@
     <FxCompile Include="Shaders\shaders.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="11. 여러 프레임 중첩 렌더링.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
