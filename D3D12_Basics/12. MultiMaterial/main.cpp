@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Resource.h"
 #include "D3D12Renderer.h"
+#include "VertexUtil.h"
 
 
 // .lib files link
@@ -72,15 +73,16 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 // D3D12Renderer
 std::shared_ptr<D3D12Renderer> g_pRenderer = nullptr;
-std::shared_ptr<void> g_pMeshObj = nullptr;
-std::shared_ptr<void> g_pTexHandle0 = nullptr;
-std::shared_ptr<void> g_pTexHandle1 = nullptr;
+std::shared_ptr<void> g_pMeshObj0 = nullptr;
+std::shared_ptr<void> g_pMeshObj1 = nullptr;
 
 float g_fRot0 = 0.f;
 float g_fRot1 = 0.f;
+float g_fRot2 = 0.f;
 
 XMMATRIX g_matWorld0 = {};
 XMMATRIX g_matWorld1 = {};
+XMMATRIX g_matWorld2 = {};
 
 ULONGLONG g_PrvFrameCheckTick = 0;
 ULONGLONG g_PrvUpdateTick = 0;
@@ -88,6 +90,9 @@ DWORD g_FrameCount = 0;
 
 void RunGame();
 void Update();
+
+std::shared_ptr<void> CreateBoxMeshObject();
+std::shared_ptr<void> CreateQuadMesh();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -124,10 +129,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #elif _DEBUG
     g_pRenderer->Initialize(g_hMainWindow, FALSE, FALSE);
 #endif
-    g_pMeshObj = g_pRenderer->CreateBasicMeshObject();
 
-    g_pTexHandle0 = g_pRenderer->CreateTiledTexture(16, 16, 192, 128, 255);
-    g_pTexHandle1 = g_pRenderer->CreateTextureFromFile(L"miku.dds");
+    g_pMeshObj0 = CreateBoxMeshObject();
+    g_pMeshObj1 = CreateQuadMesh();
 
     SetWindowText(g_hMainWindow, L"DrawTriangle_VBonSysMem");
 
@@ -147,12 +151,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // TODO: Run
             RunGame();
         }
-    }
-
-    if (g_pMeshObj)
-    {
-        g_pRenderer->DeleteBasicMeshObject(g_pMeshObj);
-        g_pMeshObj = nullptr;
     }
 
     if (g_pRenderer)
@@ -190,8 +188,12 @@ void RunGame()
     }
 
     // Render
-    g_pRenderer->RenderMeshObject(g_pMeshObj, g_matWorld0, g_pTexHandle0);
-    g_pRenderer->RenderMeshObject(g_pMeshObj, g_matWorld1, g_pTexHandle1);
+    // 하나의 오브젝트를 여러 컨텍스트로 렌더링
+    g_pRenderer->RenderMeshObject(g_pMeshObj0, g_matWorld0);
+    g_pRenderer->RenderMeshObject(g_pMeshObj0, g_matWorld1);
+
+    // 다른 오브젝트를 렌더링
+    g_pRenderer->RenderMeshObject(g_pMeshObj1, g_matWorld2);
 
     // EndRender
     g_pRenderer->EndRender();
@@ -224,7 +226,7 @@ void Update()
     XMMATRIX matRot0 = XMMatrixRotationX(g_fRot0);
 
     // translation
-    XMMATRIX matTrans0 = XMMatrixTranslation(-0.15f, 0.0f, 0.25f);
+    XMMATRIX matTrans0 = XMMatrixTranslation(-0.5f, 0.0f, 0.25f);
 
     // rot0 x trans0
     g_matWorld0 = XMMatrixMultiply(matRot0, matTrans0);
@@ -239,10 +241,25 @@ void Update()
     XMMATRIX matRot1 = XMMatrixRotationY(g_fRot1);
 
     // translation
-    XMMATRIX matTrans1 = XMMatrixTranslation(0.15f, 0.0f, 0.25f);
+    XMMATRIX matTrans1 = XMMatrixTranslation(0.0f, 0.0f, 0.25f);
 
     // rot1 x trans1
     g_matWorld1 = XMMatrixMultiply(matRot1, matTrans1);
+    
+    //
+    // world matrix 1
+    //
+    g_matWorld2 = XMMatrixIdentity();
+
+    // world matrix 1
+    // rotation 
+    XMMATRIX matRot2 = XMMatrixRotationY(g_fRot1);
+
+    // translation
+    XMMATRIX matTrans2 = XMMatrixTranslation(0.5f, 0.0f, 0.25f);
+
+    // rot1 x trans1
+    g_matWorld2 = XMMatrixMultiply(matRot2, matTrans2);
 
     BOOL	bChangeTex = FALSE;
     g_fRot0 += 0.05f;
@@ -257,6 +274,69 @@ void Update()
     {
         g_fRot1 = 0.0f;
     }
+
+    g_fRot2 += 0.1f;
+    if (g_fRot2 > 2.0f * 3.1415f)
+    {
+        g_fRot2 = 0.0f;
+    }
+}
+
+std::shared_ptr<void> CreateBoxMeshObject()
+{
+    std::shared_ptr<void> pMeshObj = nullptr;
+
+    // Box Mesh 생성
+    WORD pIndexList[36];
+    std::vector<BasicVertex> VertexList = {};
+    DWORD dwVertexCount = VertexUtil::CreateBoxMesh(VertexList, pIndexList, (DWORD)_countof(pIndexList), 0.25f);
+
+    pMeshObj = g_pRenderer->CreateBasicMeshObject();
+
+    const WCHAR* wchTexFileNameList[6] =
+    {
+        L"tex_00.dds",
+        L"tex_01.dds",
+        L"tex_02.dds",
+        L"tex_03.dds",
+        L"tex_04.dds",
+        L"tex_05.dds"
+    };
+
+    g_pRenderer->BeginCreateMesh(pMeshObj, VertexList.data(), dwVertexCount, 6);
+    for (DWORD i = 0; i < 6; i++)
+    {
+        g_pRenderer->InsertTriGroup(pMeshObj, pIndexList + i * 6, 2, wchTexFileNameList[i]);
+    }
+    g_pRenderer->EndCreateMesh(pMeshObj);
+
+    return pMeshObj;
+}
+
+std::shared_ptr<void> CreateQuadMesh()
+{
+    std::shared_ptr<void> pMeshObj = nullptr;
+    pMeshObj = g_pRenderer->CreateBasicMeshObject();
+
+    BasicVertex pVertexList[] =
+    {
+        { { -0.25f, 0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f } },
+        { { 0.25f, 0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f } },
+        { { 0.25f, -0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } },
+        { { -0.25f, -0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f } },
+    };
+
+    WORD pIndexList[] =
+    {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+
+    g_pRenderer->BeginCreateMesh(pMeshObj, pVertexList, (DWORD)_countof(pVertexList), 1);
+    g_pRenderer->InsertTriGroup(pMeshObj, pIndexList, 2, L"tex_06.dds");
+    g_pRenderer->EndCreateMesh(pMeshObj);
+    return pMeshObj;
 }
 
 //

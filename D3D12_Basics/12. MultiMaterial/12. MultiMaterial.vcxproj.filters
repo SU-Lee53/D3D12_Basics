@@ -49,11 +49,11 @@
     <Filter Include="Renderer\SingleDescriptorAllocator">
       <UniqueIdentifier>{d3515668-21b8-4b3a-b133-d58e490e79c5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Util\D3DUtil">
-      <UniqueIdentifier>{3cd2f526-a5f0-4a0c-83e8-36e074efa2ba}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Util\IndexCreator">
       <UniqueIdentifier>{eaf0e9fc-b3a5-4249-8800-12997bb4284e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util\Util">
+      <UniqueIdentifier>{3cd2f526-a5f0-4a0c-83e8-36e074efa2ba}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -76,7 +76,7 @@
       <Filter>Renderer\D3D12ResourceManager</Filter>
     </ClInclude>
     <ClInclude Include="D3DUtil.h">
-      <Filter>Util\D3DUtil</Filter>
+      <Filter>Util\Util</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader12.h">
       <Filter>DirectXTex</Filter>
@@ -98,6 +98,12 @@
     </ClInclude>
     <ClInclude Include="..\DirectXTex\DirectXTex.h">
       <Filter>DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexUtil.h">
+      <Filter>Util\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedef.h">
+      <Filter>Typedef</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -124,7 +130,7 @@
       <Filter>Renderer\D3D12ResourceManager</Filter>
     </ClCompile>
     <ClCompile Include="D3DUtil.cpp">
-      <Filter>Util\D3DUtil</Filter>
+      <Filter>Util\Util</Filter>
     </ClCompile>
     <ClCompile Include="DDSTextureLoader12.cpp">
       <Filter>DirectXTex</Filter>
@@ -147,6 +153,9 @@
     <ClCompile Include="SingleDescriptorAllocator.cpp">
       <Filter>Renderer\SingleDescriptorAllocator</Filter>
     </ClCompile>
+    <ClCompile Include="VertexUtil.cpp">
+      <Filter>Util\Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shaders.hlsl">
@@ -155,5 +164,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="12. 하나의 Object에 여러 개의 Material 사용.md" />
   </ItemGroup>
 </Project>

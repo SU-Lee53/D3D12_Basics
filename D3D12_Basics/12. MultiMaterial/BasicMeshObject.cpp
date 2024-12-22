@@ -29,7 +29,7 @@ BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
 	return bResult;
 }
 
-void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld, const D3D12_CPU_DESCRIPTOR_HANDLE& srv)
+void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld)
 {
 	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
 	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
@@ -42,13 +42,15 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
+	DWORD dwRequiredDescriptorCount = DESCRIPTOR_COUNT_PER_OBJ + (m_dwTriGroupCount * DESCRIPTOR_COUNT_PER_TRI_GROUP);
 
-	if (!refDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, DESCRIPTOR_COUNT_FOR_DRAW))
+	if (!refDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, dwRequiredDescriptorCount))
 	{
 		__debugbreak();
 		return;
 	}
 
+	// 각각의 draw() 에 대해 독립적인 constant buffer(내부적으로는 같은 Resource 의 영역) 을 사용함
 	CB_CONTAINER* pCB = refConstantBufferPool->Alloc();
 	if (!pCB)
 	{
@@ -62,70 +64,124 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	m_pRenderer->GetViewProjMatrix(pConstantBufferDefault->matView, pConstantBufferDefault->matProj);
 	pConstantBufferDefault->matWorld = XMMatrixTranspose(pMatWorld);
 
+	// Descriptor Table 을 구성
+	// 이번에 사용할 constant buffer 의 descriptor 를 렌더링용(SHADER_VISIBLE) descriptor table 에 복사
+	
+	// per Obj
+	CD3DX12_CPU_DESCRIPTOR_HANDLE Dest(cpuDescriptorTable, BASIC_MESH_DESCRIPTOR_INDEX_PER_OBJ_CBV, srvDescriptorSize);
+	prefD3DDevice->CopyDescriptorsSimple(1, Dest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	Dest.Offset(1, srvDescriptorSize);
+
+	// per Tri Group
+	for (DWORD i = 0; i < m_dwTriGroupCount; i++)
+	{
+		const INDEXED_TRI_GROUP& TriGroup = m_TriGroupList[i];
+		std::shared_ptr<TEXTURE_HANDLE> pTexHandle = TriGroup.pTexHandle;
+		
+		if (pTexHandle)
+		{
+			prefD3DDevice->CopyDescriptorsSimple(1, Dest, pTexHandle->srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		}
+		else
+		{
+			__debugbreak();
+		}
+
+		Dest.Offset(1, srvDescriptorSize);
+	}
+
 
 	// Root Signature 설정
 	pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
-
-	// 텍스쳐가 있는 Descriptor Heap 을 설정
 	pCommandList->SetDescriptorHeaps(1, refDescriptorHeap.GetAddressOf());
 
-	// 이번에 사용할 constantBuffer 의 Descriptor 를 렌더링용(SHADER_VISIBLE 한) Descriptor Table 에 복사
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvDest(cpuDescriptorTable, (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_CBV, srvDescriptorSize);
-	prefD3DDevice->CopyDescriptorsSimple(1, cbvDest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	// srv(texture) 의 Descriptor 를 렌더링용 Descriptor Table 에 복사
-	if (srv.ptr)
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE srvDest(cpuDescriptorTable, (INT)BASIC_MESH_DESCRIPTOR_INDEX::BASIC_MESH_DESCRIPTOR_INDEX_TEX, srvDescriptorSize);
-		prefD3DDevice->CopyDescriptorsSimple(1, srvDest, srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	}
-
-	pCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
+	// 현재 Root Signature 의 구조
+	// Descriptor Table : | CBV | SRV[0] | SRV[1] | SRV[2] | SRV[3] | SRV[4] | SRV[5] | 
 
 	pCommandList->SetPipelineState(m_pPipelineState.Get());
 	pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	pCommandList->IASetIndexBuffer(&m_IndexBufferView);
-	pCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+	// Root Parameter[0] 의 Descriptor Table 을 설정함
+	pCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
+
+	// gpuDescriptorTable 에서 srvDescriptorSize 만큼 DESCRIPTOR_COUNT_PER_OBJ 을 offset 으로 이동한 D3D12_GPU_DESCRIPTOR_HANDLE -> SRV 시작주소
+	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandleForTriGroup(gpuDescriptorTable, DESCRIPTOR_COUNT_PER_OBJ, srvDescriptorSize);
+	for (DWORD i = 0; i < m_dwTriGroupCount; i++)
+	{
+		// Root Parameter[1] 의 Descriptor Table 을 설정함
+		pCommandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandleForTriGroup);
+		gpuDescriptorHandleForTriGroup.Offset(1, srvDescriptorSize);	// 다음 SRV로 offset 이동
+
+		const INDEXED_TRI_GROUP& TriGroup = m_TriGroupList[i];
+		pCommandList->IASetIndexBuffer(&TriGroup.IndexBufferView);
+		pCommandList->DrawIndexedInstanced(TriGroup.dwTriCount * 3, 1, 0, 0, 0);
+	}
+
 }
 
-BOOL BasicMeshObject::CreateMesh()
+BOOL BasicMeshObject::BeginCreateMesh(const BasicVertex* pVertexList, DWORD dwVertexNum, DWORD dwTriGroupCount)
 {
 	BOOL bResult = FALSE;
-	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
-	std::shared_ptr<D3D12ResourceManager>& pResourceManager = m_pRenderer->GetResourceManager();
+	ComPtr<ID3D12Device5>& refD3DDevice = m_pRenderer->GetDevice();
+	std::shared_ptr<D3D12ResourceManager>& prefResourceManager = m_pRenderer->GetResourceManager();
 
-	BasicVertex Vertices[] =
-	{
-		{ { -0.25f, 0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {0.f, 0.f} },
-		{ { 0.25f, 0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {1.f, 0.f} },
-		{ { 0.25f, -0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {1.f, 1.f} },
-		{ { -0.25f, -0.25f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, {0.f, 1.f} }
-	};
+	if (dwTriGroupCount > MAX_TRI_GROUP_COUNT_PER_OBJ)
+		__debugbreak();
 
-	WORD Indices[] =
-	{
-		0, 1, 2,
-		0, 2, 3
-	};
-
-	const UINT VertexBufferSize = sizeof(Vertices);
-
-	if (FAILED(pResourceManager->CreateVertexBuffer(sizeof(BasicVertex), (DWORD)_countof(Vertices), m_VertexBufferView, m_pVertexBuffer, Vertices)))
+	HRESULT hr = prefResourceManager->CreateVertexBuffer(sizeof(BasicVertex), dwVertexNum, m_VertexBufferView, m_pVertexBuffer, (void*)pVertexList);
+	if (FAILED(hr))
 	{
 		__debugbreak();
-		return FALSE;
+		return bResult;
 	}
 
-	if (FAILED(pResourceManager->CreateIndexBuffer((DWORD)_countof(Indices), m_IndexBufferView, m_pIndexBuffer, Indices)))
-	{
-		__debugbreak();
-		return FALSE;
-	}
+	m_dwMaxTriGroupCount = dwTriGroupCount;
+	m_TriGroupList.resize(m_dwMaxTriGroupCount);
 
 	bResult = TRUE;
 
+	return TRUE;
+}
+
+BOOL BasicMeshObject::InsertTriGroup(const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFileName)
+{
+	BOOL bResult = FALSE;
+
+	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
+	UINT srvDescriptorSize = m_pRenderer->GetSrvDescriptorSize();
+	std::shared_ptr<D3D12ResourceManager>& prefResourceManager = m_pRenderer->GetResourceManager();
+	std::shared_ptr<SingleDescriptorAllocator>& prefSingleDescriptorAllocator = m_pRenderer->GetSingleDescriptorAllocator();
+
+	ComPtr<ID3D12Resource> pIndexBuffer = nullptr;
+	D3D12_INDEX_BUFFER_VIEW IndexBufferView = {};
+
+	if (m_dwTriGroupCount >= m_dwMaxTriGroupCount)
+	{
+		__debugbreak();
+		return bResult;
+	}
+
+	HRESULT hr = prefResourceManager->CreateIndexBuffer(dwTriCount * 3, IndexBufferView, pIndexBuffer, (void*)pIndexList);
+	if (FAILED(hr))
+	{
+		__debugbreak();
+		return bResult;
+	}
+
+	INDEXED_TRI_GROUP* pTriGroup = &m_TriGroupList[m_dwTriGroupCount];
+	pTriGroup->pIndexBuffer = pIndexBuffer;
+	pTriGroup->IndexBufferView = IndexBufferView;
+	pTriGroup->dwTriCount = dwTriCount;
+	pTriGroup->pTexHandle = std::static_pointer_cast<TEXTURE_HANDLE>(m_pRenderer->CreateTextureFromFile(wchTexFileName));
+	m_dwTriGroupCount++;
+	bResult = TRUE;
+
 	return bResult;
+}
+
+void BasicMeshObject::EndCreateMesh()
+{
 }
 
 BOOL BasicMeshObject::InitCommonResources()
@@ -144,12 +200,47 @@ BOOL BasicMeshObject::InitRootSignature()
 {
 	ComPtr<ID3D12Device5>& pD3DDevice = m_pRenderer->GetDevice();
 
-	CD3DX12_DESCRIPTOR_RANGE ranges[2] = {};
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	/*
+		이번 Root Signature 는 아래같은 형태로 구성됨
+		
+		Object - CBV - RootParam[0]
+		{
+			TriGroup[0] - SRV[0] - RootParam[1] - Draw()
+			TriGroup[1] - SRV[1] - RootParam[1] - Draw()
+			TriGroup[2] - SRV[2] - RootParam[1] - Draw()
+			TriGroup[3] - SRV[3] - RootParam[1] - Draw()
+			TriGroup[4] - SRV[4] - RootParam[1] - Draw()
+			TriGroup[5] - SRV[5] - RootParam[1] - Draw()
+		}
+		
+		이해가 안된다면 렌더링 시 Descriptor Table은 아래처럼 구성됨
 
-	CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-	rootParameters[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);
+			Descriptor Table : | CBV | SRV[0] | SRV[1] | SRV[2] | SRV[3] | SRV[4] | SRV[5] | 
+		
+		이때 아래에서 Root Signature 의 Root Parameter 는 2개인데 각 면마다 아래처럼 구성되어 렌더링 됨
+
+			Descriptor Table	:	|   CBV    |  SRV[0]  |  SRV[1]  |  SRV[2]  |  SRV[3]  |  SRV[4]  |  SRV[5]  |
+			Root Signature		
+				Tri Group[0]	:	| Param[0] | Param[1] |
+				Tri Group[1]	:	| Param[0] |          | Param[1] |
+				Tri Group[2]	:	| Param[0] |                     | Param[1] |
+				Tri Group[3]	:	| Param[0] |                                | Param[1] |
+				Tri Group[4]	:	| Param[0] |                                           | Param[1] |
+				Tri Group[5]	:	| Param[0] |                                                      | Param[1] |
+
+		이런식으로 Root Parameter 가 가리키는 Descriptor 의 Offset 을 옮겨 다니면서 각 면마다 다른 텍스쳐를 그리게 됨
+	*/
+
+	CD3DX12_DESCRIPTOR_RANGE rangesPerObj[1] = {};
+	rangesPerObj[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE rangesPerTriGroup[1] = {};
+	rangesPerTriGroup[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_ROOT_PARAMETER rootParameters[2] = {};
+	rootParameters[0].InitAsDescriptorTable(_countof(rangesPerObj), rangesPerObj, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[1].InitAsDescriptorTable(_countof(rangesPerTriGroup), rangesPerTriGroup, D3D12_SHADER_VISIBILITY_ALL);
+
 
 	// Default Sampler
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -167,7 +258,6 @@ BOOL BasicMeshObject::InitRootSignature()
 
 	// Root Signature 생성
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	// rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);	// 이전의 코드. 비어있는 Root Signature 가 나옴
 	rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> pSignature = nullptr;

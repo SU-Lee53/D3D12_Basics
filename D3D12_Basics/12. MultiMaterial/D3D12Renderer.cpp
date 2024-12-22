@@ -231,7 +231,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
 	{
 		m_pDescriptorPools[i] = std::make_shared<DescriptorPool>();
-		m_pDescriptorPools[i]->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::DESCRIPTOR_COUNT_FOR_DRAW);
+		m_pDescriptorPools[i]->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::MAX_DESCRIPTOR_COUNT_FOR_DRAW);
 
 		m_pConstantBufferPools[i] = std::make_shared<SimpleConstantBufferPool>();
 		m_pConstantBufferPools[i]->Initialize(m_pD3DDevice, D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
@@ -567,8 +567,6 @@ std::shared_ptr<void> D3D12Renderer::CreateBasicMeshObject()
 {
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::make_shared<BasicMeshObject>();
 	pMeshObj->Initialize(shared_from_this());
-	pMeshObj->CreateMesh();
-
 	return pMeshObj;
 }
 
@@ -578,18 +576,34 @@ void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 	pMeshObj.reset();
 }
 
-void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld, std::shared_ptr<void>& pTexHandle)
+BOOL D3D12Renderer::BeginCreateMesh(std::shared_ptr<void>& prefMeshObjHandle, const BasicVertex* pVertexList, DWORD dwVertexCount, DWORD dwTriGroupCount)
+{
+	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(prefMeshObjHandle);
+	BOOL bResult = pMeshObj->BeginCreateMesh(pVertexList, dwVertexCount, dwTriGroupCount);
+	return bResult;
+}
+
+BOOL D3D12Renderer::InsertTriGroup(std::shared_ptr<void>& prefMeshObjHandle, const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFilename)
+{
+	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(prefMeshObjHandle);
+	BOOL bResult = pMeshObj->InsertTriGroup(pIndexList, dwTriCount, wchTexFilename);
+	return bResult;
+}
+
+void D3D12Renderer::EndCreateMesh(std::shared_ptr<void>& prefMeshObjHandle)
+{
+	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(prefMeshObjHandle);
+	pMeshObj->EndCreateMesh();
+}
+
+void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld)
 {
 	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
 
 	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
-	if (pTexHandle)
-	{
-		srv = std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle)->srv;
-	}
-
-	pMeshObj->Draw(pCommandList, refMatWorld, srv);
+	
+	pMeshObj->Draw(pCommandList, refMatWorld);
 }
 
 std::shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)

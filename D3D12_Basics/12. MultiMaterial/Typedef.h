@@ -39,3 +39,9 @@ struct TEXTURE_HANDLE
 	ComPtr<ID3D12Resource> pTexResource;
 	D3D12_CPU_DESCRIPTOR_HANDLE srv;
 };
+
+struct TVERTEX
+{
+	float u;
+	float v;
+};

@@ -46,7 +46,12 @@ public:
 	std::shared_ptr<void> CreateBasicMeshObject();
 	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
 
-	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld, std::shared_ptr<void>& pTexHandle);
+	BOOL BeginCreateMesh(std::shared_ptr<void>& prefMeshObjHandle, const BasicVertex* pVertexList, DWORD dwVertexCount, DWORD dwTriGroupCount);
+	BOOL InsertTriGroup(std::shared_ptr<void>& prefMeshObjHandle, const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFilename);
+	void EndCreateMesh(std::shared_ptr<void>& prefMeshObjHandle);
+
+
+	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld);
 
 	std::shared_ptr<void> CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b);
 	std::shared_ptr<void> CreateTextureFromFile(const WCHAR* wchFilename);

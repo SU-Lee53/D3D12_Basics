@@ -150,6 +150,8 @@
     <ClInclude Include="SimpleConstantBufferPool.h" />
     <ClInclude Include="SingleDescriptorAllocator.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Typedef.h" />
+    <ClInclude Include="VertexUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="12. MultiMaterial.rc" />
@@ -174,11 +176,13 @@
     </ClCompile>
     <ClCompile Include="SimpleConstantBufferPool.cpp" />
     <ClCompile Include="SingleDescriptorAllocator.cpp" />
+    <ClCompile Include="VertexUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shaders.hlsl" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="12. 하나의 Object에 여러 개의 Material 사용.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
