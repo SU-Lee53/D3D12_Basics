@@ -160,8 +160,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
     // for crtcheck test
-    char* byte = new char[100];
-    memset(byte, 'a', 100);
+    //char* byte = new char[100];
+    //memset(byte, 'a', 100);
 
 #ifdef _DEBUG
     //_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
