@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -21,8 +22,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f4486de4-91d9-491e-9b2d-eda8c00b9f6d}</ProjectGuid>
-    <RootNamespace>DepthStencilBuffer</RootNamespace>
+    <ProjectGuid>{f249d7ae-3d01-4a0c-a261-29d4100ee46a}</ProjectGuid>
+    <RootNamespace>My13Sprite</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -103,12 +104,23 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <FxCompile>
+      <EntryPointName />
+    </FxCompile>
+    <FxCompile>
+      <ShaderType>Effect</ShaderType>
+    </FxCompile>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,22 +139,64 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DepthStencilBuffer.h" />
+    <ClInclude Include="..\DirectXTex\DirectXTex.h" />
+    <ClInclude Include="BasicMeshObject.h" />
+    <ClInclude Include="D3D12Renderer.h" />
+    <ClInclude Include="D3D12ResourceManager.h" />
+    <ClInclude Include="D3DUtil.h" />
+    <ClInclude Include="DDSTextureLoader12.h" />
+    <ClInclude Include="DescriptorPool.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="IndexCreator.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SimpleConstantBufferPool.h" />
+    <ClInclude Include="SingleDescriptorAllocator.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Typedef.h" />
+    <ClInclude Include="VertexUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DepthStencilBuffer.cpp" />
+    <ResourceCompile Include="13. Sprite.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DepthStencilBuffer.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="DepthStencilBuffer.ico" />
+    <Image Include="13. Sprite.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BasicMeshObject.cpp" />
+    <ClCompile Include="D3D12Renderer.cpp" />
+    <ClCompile Include="D3D12ResourceManager.cpp" />
+    <ClCompile Include="D3DUtil.cpp" />
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="DescriptorPool.cpp" />
+    <ClCompile Include="IndexCreator.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SimpleConstantBufferPool.cpp" />
+    <ClCompile Include="SingleDescriptorAllocator.cpp" />
+    <ClCompile Include="VertexUtil.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\shaders.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="13. Sprite 구현.md" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+  </Target>
 </Project>
