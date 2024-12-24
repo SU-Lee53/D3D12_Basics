@@ -11,6 +11,7 @@ class D3D12ResourceManager;
 class DescriptorPool;
 class SimpleConstantBufferPool;
 class SingleDescriptorAllocator;
+class ConstantBufferManager;
 
 class D3D12Renderer : public std::enable_shared_from_this<D3D12Renderer>
 {
@@ -43,6 +44,7 @@ private:
 	void WaitForFenceValue(UINT64 ExpectedFenceValue);
 
 public:
+	// Basic Mesh Functions
 	std::shared_ptr<void> CreateBasicMeshObject();
 	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
 
@@ -50,9 +52,18 @@ public:
 	BOOL InsertTriGroup(std::shared_ptr<void>& prefMeshObjHandle, const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFilename);
 	void EndCreateMesh(std::shared_ptr<void>& prefMeshObjHandle);
 
-
 	void RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, const XMMATRIX& refMatWorld);
 
+	// Sprite Functions
+	std::shared_ptr<void> CreateSpriteObject();
+	std::shared_ptr<void> CreateSpriteObject(const std::wstring wstrFilename, int PosX, int PosY, int Width, int Height);
+	void DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle);
+
+	void RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT& pRect, float Z, std::shared_ptr<void>& pTexHandle);
+	void RenderSprite(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, float Z);
+
+
+	// Texture Functions
 	std::shared_ptr<void> CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b);
 	std::shared_ptr<void> CreateTextureFromFile(const WCHAR* wchFilename);
 	// 종료시가 아닌 런타임에 임의로 텍스쳐를 제거할 수도 있음
@@ -64,7 +75,7 @@ public:
 	std::shared_ptr<D3D12ResourceManager>& GetResourceManager() { return m_pResourceManager; }
 
 	std::shared_ptr<DescriptorPool>& GetDescriptorPool() { return m_pDescriptorPools[m_dwCurContextIndex]; }
-	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool() { return m_pConstantBufferPools[m_dwCurContextIndex]; }
+	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool(CONSTANT_BUFFER_TYPE type);
 
 	UINT& GetSrvDescriptorSize() { return m_uiSRVDescriptorSize; }
 	std::shared_ptr<SingleDescriptorAllocator>& GetSingleDescriptorAllocator() { return m_pSingleDescriptorAllocator; }
@@ -74,6 +85,10 @@ public:
 		refOutMatView = XMMatrixTranspose(m_matView);
 		refOutMatProj = XMMatrixTranspose(m_matProj);
 	}
+
+	DWORD GetScreenWidth() { return m_dwWidth; }
+	DWORD GetScreenHeight() { return m_dwHeight; }
+
 
 private:
 	HWND m_hWnd = nullptr;
@@ -86,7 +101,7 @@ private:
 	std::array<ComPtr<ID3D12CommandAllocator>, MAX_PENDING_FRAME_COUNT>				m_pCommandAllocators = {};
 	std::array<ComPtr<ID3D12GraphicsCommandList>, MAX_PENDING_FRAME_COUNT>			m_pCommandLists = {};
 	std::array<std::shared_ptr<DescriptorPool>, MAX_PENDING_FRAME_COUNT>			m_pDescriptorPools = {};
-	std::array<std::shared_ptr<SimpleConstantBufferPool>, MAX_PENDING_FRAME_COUNT>	m_pConstantBufferPools = {};
+	std::array<std::shared_ptr<ConstantBufferManager>, MAX_PENDING_FRAME_COUNT>		m_pConstantBufferManagers = {};
 	std::array<UINT64, MAX_PENDING_FRAME_COUNT>										m_ui64LastFenceValues = {};
 	UINT64 m_ui64FenceValue = 0;
 

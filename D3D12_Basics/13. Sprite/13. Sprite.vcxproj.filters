@@ -55,6 +55,12 @@
     <Filter Include="Util\IndexCreator">
       <UniqueIdentifier>{00f29ab1-697c-413c-9f66-98a652f7bab6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\SpriteObject">
+      <UniqueIdentifier>{b16342d1-737e-42c2-9cd9-4ad9122b11b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\ConstantBufferManager">
+      <UniqueIdentifier>{79eae3a4-0d0c-4760-9fd0-233a973363b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -104,6 +110,12 @@
     </ClInclude>
     <ClInclude Include="..\DirectXTex\DirectXTex.h">
       <Filter>DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="SpriteObject.h">
+      <Filter>Renderer\SpriteObject</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBufferManager.h">
+      <Filter>Renderer\ConstantBufferManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -156,11 +168,12 @@
     <ClCompile Include="VertexUtil.cpp">
       <Filter>Util\Util</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\shaders.hlsl">
-      <Filter>Renderer\Shader</Filter>
-    </FxCompile>
+    <ClCompile Include="SpriteObject.cpp">
+      <Filter>Renderer\SpriteObject</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBufferManager.cpp">
+      <Filter>Renderer\ConstantBufferManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

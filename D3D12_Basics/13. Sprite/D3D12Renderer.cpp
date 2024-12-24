@@ -6,6 +6,9 @@
 #include "DescriptorPool.h"
 #include "SimpleConstantBufferPool.h"
 #include "SingleDescriptorAllocator.h"
+#include "ConstantBufferManager.h"
+#include "SpriteObject.h"
+
 
 D3D12Renderer::D3D12Renderer()
 {
@@ -233,8 +236,8 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 		m_pDescriptorPools[i] = std::make_shared<DescriptorPool>();
 		m_pDescriptorPools[i]->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * BasicMeshObject::MAX_DESCRIPTOR_COUNT_FOR_DRAW);
 
-		m_pConstantBufferPools[i] = std::make_shared<SimpleConstantBufferPool>();
-		m_pConstantBufferPools[i]->Initialize(m_pD3DDevice, D3DUtils::AlignConstantBuffersize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
+		m_pConstantBufferManagers[i] = std::make_shared<ConstantBufferManager>();
+		m_pConstantBufferManagers[i]->Initialize(m_pD3DDevice, BasicMeshObject::MAX_DESCRIPTOR_COUNT_FOR_DRAW);
 	}
 	m_pSingleDescriptorAllocator = std::make_shared<SingleDescriptorAllocator>();
 	m_pSingleDescriptorAllocator->Initialize(m_pD3DDevice, MAX_DESCRIPTOR_COUNT, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
@@ -329,7 +332,7 @@ void D3D12Renderer::Present()
 	WaitForFenceValue(m_ui64LastFenceValues[dwNextCondextIndex]);
 
 	// 강의에 설명이 없는데 안하면 터짐
-	m_pConstantBufferPools[dwNextCondextIndex]->Reset();
+	m_pConstantBufferManagers[dwNextCondextIndex]->Reset();
 	m_pDescriptorPools[dwNextCondextIndex]->Reset();
 	m_dwCurContextIndex = dwNextCondextIndex;
 }
@@ -606,6 +609,61 @@ void D3D12Renderer::RenderMeshObject(std::shared_ptr<void>& pMeshObjHandle, cons
 	pMeshObj->Draw(pCommandList, refMatWorld);
 }
 
+std::shared_ptr<void> D3D12Renderer::CreateSpriteObject()
+{
+	std::shared_ptr<SpriteObject> pSprObj = std::make_shared<SpriteObject>();
+	pSprObj->Initialize(shared_from_this());
+
+	return std::static_pointer_cast<void>(pSprObj);
+}
+
+std::shared_ptr<void> D3D12Renderer::CreateSpriteObject(const std::wstring wstrFilename, int PosX, int PosY, int Width, int Height)
+{
+	std::shared_ptr<SpriteObject> pSprObj = std::make_shared<SpriteObject>();
+
+	RECT rect;
+	rect.left = PosX;
+	rect.top = PosY;
+	rect.right = Width;
+	rect.bottom = Height;
+	pSprObj->Initialize(shared_from_this(), wstrFilename.c_str(), &rect);
+
+	return std::static_pointer_cast<void>(pSprObj);
+}
+
+void D3D12Renderer::DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle)
+{
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
+	std::shared_ptr<SpriteObject> pSprObj = std::static_pointer_cast<SpriteObject>(pSpriteHandle);
+	pSprObj.reset();	// need to check ref_count
+}
+
+void D3D12Renderer::RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT& pRect, float Z, std::shared_ptr<void>& pTexHandle)
+{
+	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
+	std::shared_ptr<SpriteObject> pSpriteObj = std::static_pointer_cast<SpriteObject>(pSpriteHandle);
+
+	XMFLOAT2 Pos = { (float)iPosX, (float)iPosY };
+	XMFLOAT2 Scale = { fScaleX, fScaleY };
+
+	pSpriteObj->DrawWithTex(pCommandList, Pos, Scale, &pRect, Z, std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle).get());
+}
+
+void D3D12Renderer::RenderSprite(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, float Z)
+{
+	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
+	std::shared_ptr<SpriteObject> pSpriteObj = std::static_pointer_cast<SpriteObject>(pSpriteHandle);
+
+	XMFLOAT2 Pos = { (float)iPosX, (float)iPosY };
+	XMFLOAT2 Scale = { fScaleX, fScaleY };
+
+	pSpriteObj->Draw(pCommandList, Pos, Scale, Z);
+}
+
 std::shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)
 {
 	std::shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
@@ -710,4 +768,11 @@ void D3D12Renderer::DeleteTexture(std::shared_ptr<void>& pHandle)
 	m_pSingleDescriptorAllocator->FreeDescriptorHandle(srv);
 
 	pTexHandle.reset();
+}
+
+std::shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
+{
+	std::shared_ptr<ConstantBufferManager> pConstantBufferManager = m_pConstantBufferManagers[m_dwCurContextIndex];
+	std::shared_ptr<SimpleConstantBufferPool> pConstantBufferPool = pConstantBufferManager->GetConstantBufferPool(type);
+	return pConstantBufferPool;
 }

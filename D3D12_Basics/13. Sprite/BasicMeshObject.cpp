@@ -38,7 +38,7 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	UINT srvDescriptorSize = m_pRenderer->GetSrvDescriptorSize();
 	std::shared_ptr<DescriptorPool>& refDescriptorPool = m_pRenderer->GetDescriptorPool();
 	ComPtr<ID3D12DescriptorHeap>& refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
-	std::shared_ptr<SimpleConstantBufferPool>& refConstantBufferPool = m_pRenderer->GetConstantBufferPool();
+	std::shared_ptr<SimpleConstantBufferPool>& refConstantBufferPool = m_pRenderer->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_DEFAULT);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
@@ -295,7 +295,7 @@ BOOL BasicMeshObject::InitPipelineState()
 	UINT compileFlags = 0;
 #endif
 
-	if (FAILED(D3DCompileFromFile(L"./Shaders/shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, pVertexShader.GetAddressOf(), pError.GetAddressOf())))
+	if (FAILED(D3DCompileFromFile(L"./Shaders/shBasicMesh.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, pVertexShader.GetAddressOf(), pError.GetAddressOf())))
 	{
 		std::string errMessage = (const char*)pError->GetBufferPointer();
 		MessageBoxA(NULL, errMessage.c_str(), "Failed to Compile VertexShader", MB_OK);
@@ -303,7 +303,7 @@ BOOL BasicMeshObject::InitPipelineState()
 		return FALSE;
 	}
 
-	if (FAILED(D3DCompileFromFile(L"./Shaders/shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, pPixelShader.GetAddressOf(), pError.GetAddressOf())))
+	if (FAILED(D3DCompileFromFile(L"./Shaders/shBasicMesh.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, pPixelShader.GetAddressOf(), pError.GetAddressOf())))
 	{
 		std::string errMessage = (const char*)pError->GetBufferPointer();
 		MessageBoxA(NULL, errMessage.c_str(), "Failed to Compile PixelShader", MB_OK);

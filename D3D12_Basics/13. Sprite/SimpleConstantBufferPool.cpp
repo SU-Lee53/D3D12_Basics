@@ -9,11 +9,12 @@ SimpleConstantBufferPool::~SimpleConstantBufferPool()
 {
 }
 
-BOOL SimpleConstantBufferPool::Initialize(ComPtr<ID3D12Device5>& pD3DDevice, UINT SizePerCBV, UINT MaxCBVNum)
+BOOL SimpleConstantBufferPool::Initialize(ComPtr<ID3D12Device5>& pD3DDevice, CONSTANT_BUFFER_TYPE type, UINT SizePerCBV, UINT MaxCBVNum)
 {
 	// 여기서는 Constant Buffer Pool 과 Descriptor Heap 을 쌍으로 생성함
 	// 여기서 생성되는 Descriptor Heap 은 파이프라인에 들어가지 않고 Descriptor Pool 에서 가져온 Descriptor 에다가 복사하는 Copy Src 일 뿐임
 
+	m_ConstantBufferType = type;
 	m_MaxCBVNum = MaxCBVNum;
 	m_SizePerCBV = SizePerCBV;
 	UINT ByteWidth = SizePerCBV * m_MaxCBVNum;

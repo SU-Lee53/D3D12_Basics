@@ -14,7 +14,7 @@ public:
 	SimpleConstantBufferPool();
 	~SimpleConstantBufferPool();
 
-	BOOL Initialize(ComPtr<ID3D12Device5>& pD3DDevice, UINT SizePerCBV, UINT MaxCBVNum);
+	BOOL Initialize(ComPtr<ID3D12Device5>& pD3DDevice, CONSTANT_BUFFER_TYPE type, UINT SizePerCBV, UINT MaxCBVNum);
 
 	CB_CONTAINER* Alloc();
 	void Reset();
@@ -24,6 +24,7 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap>	m_pCBVHeap = nullptr;
 	ComPtr<ID3D12Resource>			m_pResource = nullptr;
+	CONSTANT_BUFFER_TYPE			m_ConstantBufferType;
 	UINT8*	m_pSystemMemAddr = nullptr;
 	UINT	m_SizePerCBV = 0;
 	UINT	m_MaxCBVNum = 0;

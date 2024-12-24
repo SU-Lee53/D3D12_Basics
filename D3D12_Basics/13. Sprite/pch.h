@@ -30,6 +30,8 @@ using namespace Microsoft::WRL;
 // STL
 #include <array>
 #include <memory>
+#include <string>
+using namespace std::literals;
 
 #include "typedef.h"
 #include "D3DUtil.h"

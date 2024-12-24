@@ -75,6 +75,12 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 std::shared_ptr<D3D12Renderer> g_pRenderer = nullptr;
 std::shared_ptr<void> g_pMeshObj0 = nullptr;
 std::shared_ptr<void> g_pMeshObj1 = nullptr;
+std::shared_ptr<void> g_pSpriteObjCommon = nullptr;
+std::shared_ptr<void> g_pSprite0 = nullptr;
+std::shared_ptr<void> g_pSprite1 = nullptr;
+std::shared_ptr<void> g_pSprite2 = nullptr;
+std::shared_ptr<void> g_pSprite3 = nullptr;
+std::shared_ptr<void> g_pTexHandle0 = nullptr;
 
 float g_fRot0 = 0.f;
 float g_fRot1 = 0.f;
@@ -133,7 +139,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     g_pMeshObj0 = CreateBoxMeshObject();
     g_pMeshObj1 = CreateQuadMesh();
 
-    SetWindowText(g_hMainWindow, L"DrawTriangle_VBonSysMem");
+    g_pTexHandle0 = g_pRenderer->CreateTextureFromFile(L"tex_00.dds");
+    g_pSpriteObjCommon = g_pRenderer->CreateSpriteObject();
+
+    g_pSprite0 = g_pRenderer->CreateSpriteObject(L"sprite_1024x1024.dds", 0, 0, 512, 512);
+    g_pSprite1 = g_pRenderer->CreateSpriteObject(L"sprite_1024x1024.dds", 512, 0, 1024, 512);
+    g_pSprite2 = g_pRenderer->CreateSpriteObject(L"sprite_1024x1024.dds", 0, 512, 512, 1024);
+    g_pSprite3 = g_pRenderer->CreateSpriteObject(L"sprite_1024x1024.dds", 512, 512, 1024, 1024);
+
+
+    SetWindowText(g_hMainWindow, L"Sprite");
 
     // Main message loop:
     while (1)
@@ -194,6 +209,37 @@ void RunGame()
 
     // 다른 오브젝트를 렌더링
     g_pRenderer->RenderMeshObject(g_pMeshObj1, g_matWorld2);
+
+    // 스프라이트
+    RECT rect;
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = 256;
+    rect.bottom = 256;
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 0, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+
+    rect.left = 256;
+    rect.top = 0;
+    rect.right = 512;
+    rect.bottom = 256;
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 0, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+
+    rect.left = 0;
+    rect.top = 256;
+    rect.right = 256;
+    rect.bottom = 512;
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 256 + 5, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+
+    rect.left = 256;
+    rect.top = 256;
+    rect.right = 512;
+    rect.bottom = 512;
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 256 + 5, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+
+    g_pRenderer->RenderSprite(g_pSprite0, 512 + 10, 0, 0.5f, 0.5f, 1.f);
+    g_pRenderer->RenderSprite(g_pSprite1, 512 + 10 + 10 + 256, 0, 0.5f, 0.5f, 1.f);
+    g_pRenderer->RenderSprite(g_pSprite2, 512 + 10, 256 + 10, 0.5f, 0.5f, 1.f);
+    g_pRenderer->RenderSprite(g_pSprite3, 512 + 10 + 10 + 256, 256 + 10, 0.5f, 0.5f, 0.f);
 
     // EndRender
     g_pRenderer->EndRender();

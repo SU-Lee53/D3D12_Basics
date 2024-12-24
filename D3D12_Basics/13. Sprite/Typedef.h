@@ -34,6 +34,33 @@ struct CONSTANT_BUFFER_DEFAULT
 	XMMATRIX matProj;
 };
 
+struct CONSTANT_BUFFER_SPRITE
+{
+	XMFLOAT2 ScreenRes;
+	XMFLOAT2 Pos;
+	XMFLOAT2 Scale;
+	XMFLOAT2 TexSize;
+	XMFLOAT2 TexSamplePos;
+	XMFLOAT2 TexSampleSize;
+	float	Z;
+	float	Alpha;
+	float	Reserved0;
+	float	Reserved1;
+};
+
+enum CONSTANT_BUFFER_TYPE
+{
+	CONSTANT_BUFFER_TYPE_DEFAULT,
+	CONSTANT_BUFFER_TYPE_SPRITE,
+	CONSTANT_BUFFER_TYPE_COUNT
+};
+
+struct CONSTANT_BUFFER_PROPERTY
+{
+	CONSTANT_BUFFER_TYPE type;
+	UINT Size;
+};
+
 struct TEXTURE_HANDLE
 {
 	ComPtr<ID3D12Resource> pTexResource;
