@@ -100,6 +100,10 @@ void Update();
 std::shared_ptr<void> CreateBoxMeshObject();
 std::shared_ptr<void> CreateQuadMesh();
 
+#ifdef _DEBUG
+void ComLeakCheck();
+#endif
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -131,7 +135,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     g_pRenderer = std::make_shared<D3D12Renderer>();
 #ifdef _DEBUG
-    g_pRenderer->Initialize(g_hMainWindow, TRUE, TRUE); // Debug Layer ON / GPU Based Validation ON
+    g_pRenderer->Initialize(g_hMainWindow, TRUE, FALSE); // Debug Layer ON / GPU Based Validation ON
 #elif _DEBUG
     g_pRenderer->Initialize(g_hMainWindow, FALSE, FALSE);
 #endif
@@ -168,9 +172,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    if (g_pRenderer)
-        g_pRenderer.reset();
-
 
     // for crtcheck test
     //char* byte = new char[100];
@@ -180,6 +181,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     //_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     //_CrtDumpMemoryLeaks();
     _ASSERT(_CrtCheckMemory());
+    ComLeakCheck();
 #endif _DEBUG
 
     return (int)msg.wParam;
@@ -385,6 +387,22 @@ std::shared_ptr<void> CreateQuadMesh()
     return pMeshObj;
 }
 
+#ifdef _DEBUG
+void ComLeakCheck()
+{
+    HMODULE DxgiDebugDll = GetModuleHandleW(L"dxgidebug.dll");
+
+    decltype(&DXGIGetDebugInterface) GetDebugInterface = reinterpret_cast<decltype(&DXGIGetDebugInterface)>(GetProcAddress(DxgiDebugDll, "DXGIGetDebugInterface"));
+
+    ComPtr<IDXGIDebug> Debug;
+
+    GetDebugInterface(IID_PPV_ARGS(Debug.GetAddressOf()));
+
+    OutputDebugStringW(L"¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä       D3D Object ref count check       ¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä\r\n");
+    Debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
+    OutputDebugStringW(L"¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã Objects Shown above are not terminated ¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã\r\n");
+}
+#endif
 //
 //  FUNCTION: MyRegisterClass()
 //

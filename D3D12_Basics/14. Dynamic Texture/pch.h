@@ -43,5 +43,7 @@ using namespace std::literals;
 #include <crtdbg.h>
 #define new new(_NORMAL_BLOCK, __FILE__, __LINE__)
 
+#include <dxgidebug.h>
+
 #endif _DEBUG
 

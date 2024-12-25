@@ -32,6 +32,11 @@ public:
 	void Draw(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z);
 
 private:
+	// Clean Up
+	void CleanUp();
+	void CleanupSharedResources();
+
+private:
 
 	// 모든 SpriteObject 객체들이 아래 3가지 + Vertex/Index Buffer 
 	static ComPtr<ID3D12RootSignature> m_pRootSignature;

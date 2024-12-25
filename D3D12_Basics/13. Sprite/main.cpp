@@ -2,7 +2,7 @@
 #include "Resource.h"
 #include "D3D12Renderer.h"
 #include "VertexUtil.h"
-
+#include <dxgidebug.h>
 
 // .lib files link
 #pragma comment(lib, "DXGI.lib")
@@ -100,6 +100,10 @@ void Update();
 std::shared_ptr<void> CreateBoxMeshObject();
 std::shared_ptr<void> CreateQuadMesh();
 
+#ifdef _DEBUG
+void ComLeakCheck();
+#endif
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -179,7 +183,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #ifdef _DEBUG
     //_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     //_CrtDumpMemoryLeaks();
-    _ASSERT(_CrtCheckMemory());
+    //_ASSERT(_CrtCheckMemory());
+    ComLeakCheck();
 #endif _DEBUG
 
     return (int)msg.wParam;
@@ -385,6 +390,23 @@ std::shared_ptr<void> CreateQuadMesh()
     return pMeshObj;
 }
 
+#ifdef _DEBUG
+void ComLeakCheck()
+{
+    HMODULE DxgiDebugDll = GetModuleHandleW(L"dxgidebug.dll");
+
+    decltype(&DXGIGetDebugInterface) GetDebugInterface = reinterpret_cast<decltype(&DXGIGetDebugInterface)>(GetProcAddress(DxgiDebugDll, "DXGIGetDebugInterface"));
+
+    ComPtr<IDXGIDebug> Debug;
+
+    GetDebugInterface(IID_PPV_ARGS(Debug.GetAddressOf()));
+
+    OutputDebugStringW(L"¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä       D3D Object ref count check       ¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä¡å¡ä\r\n");
+    Debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
+    OutputDebugStringW(L"¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã Objects Shown above are not terminated ¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã¡â¡ã\r\n");
+}
+
+#endif
 //
 //  FUNCTION: MyRegisterClass()
 //

@@ -16,15 +16,7 @@ D3D12Renderer::D3D12Renderer()
 
 D3D12Renderer::~D3D12Renderer()
 {
-	// 현재 진행중인 그래픽 커맨드들이 모두 끝날때까지 잠깐 대기
-	Fence();
-
-	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
-	{
-		WaitForFenceValue(m_ui64LastFenceValues[i]);
-	}
-
-	// ComPtr을 사용하므로 별도의 CleanUp 은 필요없을것으로 생각됨
+	CleanUp();
 }
 
 BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
@@ -575,8 +567,14 @@ std::shared_ptr<void> D3D12Renderer::CreateBasicMeshObject()
 
 void D3D12Renderer::DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle)
 {
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
 	std::shared_ptr<BasicMeshObject> pMeshObj = std::static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	pMeshObj.reset();
+	pMeshObj = nullptr;
 }
 
 BOOL D3D12Renderer::BeginCreateMesh(std::shared_ptr<void>& prefMeshObjHandle, const BasicVertex* pVertexList, DWORD dwVertexCount, DWORD dwTriGroupCount)
@@ -631,7 +629,7 @@ std::shared_ptr<void> D3D12Renderer::CreateSpriteObject(const std::wstring wstrF
 	return std::static_pointer_cast<void>(pSprObj);
 }
 
-void D3D12Renderer::DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle)
+void D3D12Renderer::DeleteSpriteObject(std::shared_ptr<void>& pSpriteHandle)
 {
 	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
 	{
@@ -639,7 +637,8 @@ void D3D12Renderer::DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle)
 	}
 
 	std::shared_ptr<SpriteObject> pSprObj = std::static_pointer_cast<SpriteObject>(pSpriteHandle);
-	pSprObj.reset();	// need to check ref_count
+	pSprObj.reset();
+	pSprObj = nullptr;	
 }
 
 void D3D12Renderer::RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT& pRect, float Z, std::shared_ptr<void>& pTexHandle)
@@ -760,14 +759,21 @@ std::shared_ptr<void> D3D12Renderer::CreateTextureFromFile(const WCHAR* wchFilen
 
 void D3D12Renderer::DeleteTexture(std::shared_ptr<void>& pHandle)
 {
+	// wait for all commands
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
 	std::shared_ptr<TEXTURE_HANDLE> pTexHandle = std::static_pointer_cast<TEXTURE_HANDLE>(pHandle);
 	ComPtr<ID3D12Resource> pTexResource = pTexHandle->pTexResource;
 	D3D12_CPU_DESCRIPTOR_HANDLE srv = pTexHandle->srv;
 
-	pTexResource.Reset();
+	pTexResource->Release();
 	m_pSingleDescriptorAllocator->FreeDescriptorHandle(srv);
 
 	pTexHandle.reset();
+	pTexHandle = nullptr;
 }
 
 std::shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
@@ -775,4 +781,129 @@ std::shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(
 	std::shared_ptr<ConstantBufferManager> pConstantBufferManager = m_pConstantBufferManagers[m_dwCurContextIndex];
 	std::shared_ptr<SimpleConstantBufferPool> pConstantBufferPool = pConstantBufferManager->GetConstantBufferPool(type);
 	return pConstantBufferPool;
+}
+
+void D3D12Renderer::CleanUp()
+{
+	// 현재 진행중인 그래픽 커맨드들이 모두 끝날때까지 잠깐 대기
+	Fence();
+
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		if (m_pConstantBufferManagers[i])
+		{
+			m_pConstantBufferManagers[i].reset();
+			m_pConstantBufferManagers[i] = nullptr;
+		}
+		if (m_pDescriptorPools[i])
+		{
+			m_pDescriptorPools[i].reset();
+			m_pDescriptorPools[i] = nullptr;
+		}
+	}
+
+	if (m_pResourceManager)
+	{
+		m_pResourceManager.reset();
+		m_pResourceManager = nullptr;
+	}
+	if (m_pSingleDescriptorAllocator)
+	{
+		m_pSingleDescriptorAllocator.reset();
+		m_pSingleDescriptorAllocator = nullptr;
+	}
+
+	CleanupDescriptorHeapForRTV();
+	CleanupDescriptorHeapForDSV();
+
+	for (DWORD i = 0; i < SWAP_CHAIN_FRAME_COUNT; i++)
+	{
+		if (m_pRenderTargets[i])
+		{
+			m_pRenderTargets[i]->Release();
+		}
+	}
+	if (m_pDepthStencil)
+	{
+		m_pDepthStencil->Release();
+	}
+	if (m_pSwapChain)
+	{
+		m_pSwapChain->Release();
+	}
+
+	if (m_pCommandQueue)
+	{
+		m_pCommandQueue->Release();
+	}
+
+	CleanupCommandList();
+	CleanupFence();
+
+	if (m_pD3DDevice)
+	{
+		ULONG ref_count = m_pD3DDevice->Release();
+		if (ref_count)
+		{
+			//resource leak!!!
+			IDXGIDebug1* pDebug = nullptr;
+			if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
+			{
+				pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+				pDebug->Release();
+			}
+			__debugbreak();
+		}
+
+		m_pD3DDevice = nullptr;
+
+	}
+}
+
+void D3D12Renderer::CleanupDescriptorHeapForRTV()
+{
+	if (m_pRTVHeap)
+	{
+		m_pRTVHeap->Release();
+	}
+}
+
+void D3D12Renderer::CleanupDescriptorHeapForDSV()
+{
+	if (m_pDSVHeap)
+	{
+		m_pDSVHeap->Release();
+	}
+}
+
+void D3D12Renderer::CleanupCommandList()
+{
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		if (m_pCommandAllocators[i])
+		{
+			m_pCommandAllocators[i]->Release();
+		}
+		if (m_pCommandLists[i])
+		{
+			m_pCommandLists[i]->Release();
+		}
+	}
+}
+
+void D3D12Renderer::CleanupFence()
+{
+	if (m_hFenceEvent)
+	{
+		CloseHandle(m_hFenceEvent);
+	}
+	if (m_pFence)
+	{
+		m_pFence->Release();
+	}
 }
