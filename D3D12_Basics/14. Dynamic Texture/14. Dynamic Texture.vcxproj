@@ -22,8 +22,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f249d7ae-3d01-4a0c-a261-29d4100ee46a}</ProjectGuid>
-    <RootNamespace>My13Sprite</RootNamespace>
+    <ProjectGuid>{c6f0afe0-efdb-4fb7-a095-6fbbd078f1ce}</ProjectGuid>
+    <RootNamespace>My14DynamicTexture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -159,10 +159,10 @@
     <ClInclude Include="VertexUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="13. Sprite.rc" />
+    <ResourceCompile Include="14. Dynamic Texture.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="13. Sprite.ico" />
+    <Image Include="14. Dynamic Texture.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -186,12 +186,12 @@
     <ClCompile Include="VertexUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="13. Sprite 구현.md" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="Shaders\shBasicMesh.hlsl" />
     <FxCompile Include="Shaders\shSprite.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="14. Dynamic Texture.md" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
