@@ -13,6 +13,7 @@ public:
 
 	BOOL CreateTexture(ComPtr<ID3D12Resource>& prefOutResource, UINT width, UINT height, DXGI_FORMAT format, BYTE* pInitImage);
 	BOOL CreateTextureFromFile(ComPtr<ID3D12Resource>& prefOutResource, D3D12_RESOURCE_DESC& refOutDesc, const WCHAR* wchFilename);
+	BOOL CreateTexturePair(ComPtr<ID3D12Resource>& prefOutResource, ComPtr<ID3D12Resource>& prefOutUploadBuffer, UINT width, UINT height, DXGI_FORMAT format);
 	void UpdateTextureForWrite(ComPtr<ID3D12Resource> pDescTexResource, ComPtr<ID3D12Resource> pSrcTexResource);
 
 public:

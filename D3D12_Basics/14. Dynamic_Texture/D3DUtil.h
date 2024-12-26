@@ -12,5 +12,6 @@ struct D3DUtils
 		return alligned_size;
 	}
 
+	static void UpdateTexture(ComPtr<ID3D12Device5>& pD3DDevice, ComPtr<ID3D12GraphicsCommandList>& pCommandList, ComPtr<ID3D12Resource>& pDestTexResource, ComPtr <ID3D12Resource>& pSrcTexResource);
 };
 

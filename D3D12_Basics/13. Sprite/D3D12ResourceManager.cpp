@@ -377,6 +377,59 @@ BOOL D3D12ResourceManager::CreateTextureFromFile(ComPtr<ID3D12Resource>& prefOut
 	return bResult;
 }
 
+BOOL D3D12ResourceManager::CreateTexturePair(ComPtr<ID3D12Resource>& prefOutResource, ComPtr<ID3D12Resource>& prefOutUploadBuffer, UINT width, UINT height, DXGI_FORMAT format)
+{
+	ComPtr<ID3D12Resource> pTexResource = nullptr;
+	ComPtr<ID3D12Resource> pUploadBuffer = nullptr;
+
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = format;
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	if (FAILED(m_pD3DDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
+		nullptr,
+		IID_PPV_ARGS(pTexResource.GetAddressOf())
+	)))
+	{
+		__debugbreak();
+		return FALSE;
+	}
+
+	UINT64 uploadBufferSize = GetRequiredIntermediateSize(pTexResource.Get(), 0, 1);
+
+	if (FAILED(m_pD3DDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(pUploadBuffer.GetAddressOf())
+	)))
+	{
+		__debugbreak();
+		return FALSE;
+	}
+	if (!pUploadBuffer.Get())
+		__debugbreak();
+
+
+	prefOutResource = pTexResource;
+	prefOutUploadBuffer = pUploadBuffer;
+
+	return TRUE;
+}
+
 void D3D12ResourceManager::UpdateTextureForWrite(ComPtr<ID3D12Resource> pDestTexResource, ComPtr<ID3D12Resource> pSrcTexResource)
 {
 	// 이건 왜 있음?

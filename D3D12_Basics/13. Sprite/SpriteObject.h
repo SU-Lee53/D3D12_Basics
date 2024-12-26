@@ -28,7 +28,7 @@ private:
 
 public:
 	// Draw
-	void DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* refRect, float Z, const TEXTURE_HANDLE* pTexHandle);
+	void DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle);
 	void Draw(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z);
 
 private:

@@ -27,7 +27,6 @@ SpriteObject::SpriteObject()
 
 SpriteObject::~SpriteObject()
 {
-	//CleanUp();
 }
 
 BOOL SpriteObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
@@ -253,43 +252,6 @@ void SpriteObject::Draw(ComPtr<ID3D12GraphicsCommandList>& refCommandList, const
 {
 	XMFLOAT2 Scale = { m_Scale.x * refScale.x, m_Scale.y * refScale.y };
 	DrawWithTex(refCommandList, refPos, Scale, &m_Rect, z, m_pTexHandle.get());
-}
-
-void SpriteObject::CleanUp()
-{
-	if (m_pTexHandle)
-	{
-		m_pRenderer->DeleteTexture(std::static_pointer_cast<void>(m_pTexHandle));
-		m_pTexHandle = nullptr;
-	}
-	CleanupSharedResources();
-}
-
-void SpriteObject::CleanupSharedResources()
-{
-	if (!m_dwInitRefCount)
-		return;
-
-	DWORD ref_count = --m_dwInitRefCount;
-	if (!ref_count)
-	{
-		if (m_pRootSignature)
-		{
-			m_pRootSignature->Release();
-		}
-		if (m_pPipelineState)
-		{
-			m_pPipelineState->Release();
-		}
-		if (m_pVertexBuffer)
-		{
-			m_pVertexBuffer->Release();
-		}
-		if (m_pIndexBuffer)
-		{
-			m_pIndexBuffer->Release();
-		}
-	}
 }
 
 void SpriteObject::DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle)

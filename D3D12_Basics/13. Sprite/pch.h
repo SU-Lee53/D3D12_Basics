@@ -35,6 +35,7 @@ using namespace std::literals;
 
 #include "typedef.h"
 #include "D3DUtil.h"
+#include "LinkedList.h"
 
 // Debugs
 #ifdef _DEBUG

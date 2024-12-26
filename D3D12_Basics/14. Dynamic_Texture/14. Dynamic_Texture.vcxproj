@@ -22,7 +22,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c6f0afe0-efdb-4fb7-a095-6fbbd078f1ce}</ProjectGuid>
+    <ProjectGuid>{9c092a80-9f40-4848-8603-5fa61238a068}</ProjectGuid>
     <RootNamespace>My14DynamicTexture</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -113,12 +113,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <FxCompile>
-      <EntryPointName />
-    </FxCompile>
-    <FxCompile>
       <ShaderType>Effect</ShaderType>
-    </FxCompile>
-    <FxCompile>
+      <EntryPointName />
       <ShaderModel>5.0</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
@@ -149,6 +145,7 @@
     <ClInclude Include="DescriptorPool.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IndexCreator.h" />
+    <ClInclude Include="LinkedList.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SimpleConstantBufferPool.h" />
@@ -159,10 +156,10 @@
     <ClInclude Include="VertexUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="14. Dynamic Texture.rc" />
+    <ResourceCompile Include="14. Dynamic_Texture.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="14. Dynamic Texture.ico" />
+    <Image Include="14. Dynamic_Texture.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +173,7 @@
     </ClCompile>
     <ClCompile Include="DescriptorPool.cpp" />
     <ClCompile Include="IndexCreator.cpp" />
+    <ClCompile Include="LinkedList.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -190,7 +188,7 @@
     <FxCompile Include="Shaders\shSprite.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="14. Dynamic Texture.md" />
+    <None Include="..\..\..\..\..\Downloads\14. Dynamic Texture.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

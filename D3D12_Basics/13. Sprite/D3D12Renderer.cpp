@@ -642,15 +642,25 @@ void D3D12Renderer::DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle)
 	pSprObj.reset();	// need to check ref_count
 }
 
-void D3D12Renderer::RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT& pRect, float Z, std::shared_ptr<void>& pTexHandle)
+void D3D12Renderer::RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT* pRect, float Z, std::shared_ptr<void>& pTexHandle)
 {
 	ComPtr<ID3D12GraphicsCommandList> pCommandList = m_pCommandLists[m_dwCurContextIndex];
+	std::shared_ptr<TEXTURE_HANDLE> pTextureHandle = std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle);
 	std::shared_ptr<SpriteObject> pSpriteObj = std::static_pointer_cast<SpriteObject>(pSpriteHandle);
 
 	XMFLOAT2 Pos = { (float)iPosX, (float)iPosY };
 	XMFLOAT2 Scale = { fScaleX, fScaleY };
 
-	pSpriteObj->DrawWithTex(pCommandList, Pos, Scale, &pRect, Z, std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle).get());
+	if (pTextureHandle->pUploadBuffer.Get())
+	{
+		if (pTextureHandle->bUpdated)
+		{
+			D3DUtils::UpdateTexture(m_pD3DDevice, pCommandList, pTextureHandle->pTexResource, pTextureHandle->pUploadBuffer);
+		}
+		pTextureHandle->bUpdated = FALSE;
+	}
+
+	pSpriteObj->DrawWithTex(pCommandList, Pos, Scale, pRect, Z, std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle).get());
 }
 
 void D3D12Renderer::RenderSprite(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, float Z)
@@ -749,7 +759,7 @@ std::shared_ptr<void> D3D12Renderer::CreateTextureFromFile(const WCHAR* wchFilen
 		{
 			m_pD3DDevice->CreateShaderResourceView(pTexResource.Get(), &SRVDesc, srv);
 
-			pTexHandle = std::make_shared<TEXTURE_HANDLE>();
+			pTexHandle = AllocTextureHandle();
 			pTexHandle->pTexResource = pTexResource;
 			pTexHandle->srv = srv;
 		}
@@ -770,9 +780,108 @@ void D3D12Renderer::DeleteTexture(std::shared_ptr<void>& pHandle)
 	pTexHandle.reset();
 }
 
+std::shared_ptr<void> D3D12Renderer::CreateDynamicTexture(UINT TexWidth, UINT TexHeight)
+{
+	std::shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
+
+	ComPtr<ID3D12Resource> pTexResource = nullptr;
+	ComPtr<ID3D12Resource> pUploadBuffer = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
+
+	DXGI_FORMAT TexFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	if (m_pResourceManager->CreateTexturePair(pTexResource, pUploadBuffer, TexWidth, TexWidth, TexFormat))
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+		SRVDesc.Format = TexFormat;
+		SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		SRVDesc.Texture2D.MipLevels = 1;
+
+		if (m_pSingleDescriptorAllocator->AllocDescriptorHandle(srv))
+		{
+			m_pD3DDevice->CreateShaderResourceView(pTexResource.Get(), &SRVDesc, srv);
+
+			pTexHandle = AllocTextureHandle();
+			pTexHandle->pTexResource = pTexResource;
+			pTexHandle->pUploadBuffer = pUploadBuffer;
+			pTexHandle->srv = srv;
+		}
+	}
+
+	return pTexHandle;
+
+
+}
+
+void D3D12Renderer::UpdateTextureWithImage(std::shared_ptr<void>& pTexHandle, const BYTE* pSrcBits, UINT srcWidth, UINT srcHeight)
+{
+	std::shared_ptr<TEXTURE_HANDLE> pTextureHandle = std::static_pointer_cast<TEXTURE_HANDLE>(pTexHandle);
+	ComPtr<ID3D12Resource> pDescTexResource = pTextureHandle->pTexResource;
+	ComPtr<ID3D12Resource> pUploadBuffer = pTextureHandle->pUploadBuffer;
+
+	D3D12_RESOURCE_DESC Desc = pDescTexResource->GetDesc();
+	if (srcWidth > Desc.Width)
+	{
+		__debugbreak();
+		return;
+	}
+
+	if (srcHeight > Desc.Height)
+	{
+		__debugbreak();
+		return;
+	}
+
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT FootPrint;
+	UINT Rows = 0;
+	UINT64 RowSize = 0;
+	UINT64 TotalBytes = 0;
+
+	m_pD3DDevice->GetCopyableFootprints(&Desc, 0, 1, 0, &FootPrint, &Rows, &RowSize, &TotalBytes);
+
+	BYTE* pMappedPtr = nullptr;
+	CD3DX12_RANGE writeRange(0, 0);
+	
+	HRESULT hr = pUploadBuffer->Map(0, &writeRange, reinterpret_cast<void**>(&pMappedPtr));
+	if (FAILED(hr))
+	{
+		__debugbreak();
+	}
+
+	const BYTE* pSrc = pSrcBits;
+	BYTE* pDest = pMappedPtr;
+	for (UINT y = 0; y < srcHeight; y++)
+	{
+		memcpy(pDest, pSrc, srcWidth * 4);
+		pSrc += (srcWidth * 4);
+		pDest += FootPrint.Footprint.RowPitch;
+	}
+
+	pUploadBuffer->Unmap(0, nullptr);
+
+	pTextureHandle->bUpdated = TRUE;
+
+
+}
+
 std::shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
 {
 	std::shared_ptr<ConstantBufferManager> pConstantBufferManager = m_pConstantBufferManagers[m_dwCurContextIndex];
 	std::shared_ptr<SimpleConstantBufferPool> pConstantBufferPool = pConstantBufferManager->GetConstantBufferPool(type);
 	return pConstantBufferPool;
+}
+
+std::shared_ptr<TEXTURE_HANDLE> D3D12Renderer::AllocTextureHandle()
+{
+	std::shared_ptr<TEXTURE_HANDLE> pTexHandle = std::make_shared<TEXTURE_HANDLE>();
+	pTexHandle->Link.pItem = pTexHandle;
+	LinkToLinkedListFIFO(&m_pTexLinkHead, &m_pTexLinkTail, &pTexHandle->Link);
+	return pTexHandle;
+}
+
+void D3D12Renderer::FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE>& pTexHandle)
+{
+	UnLinkFromLinkedList(&m_pTexLinkHead, &m_pTexLinkTail, &pTexHandle->Link);
+	pTexHandle.reset();
 }

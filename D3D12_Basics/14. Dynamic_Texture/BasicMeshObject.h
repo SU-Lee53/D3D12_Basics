@@ -38,7 +38,6 @@ public:
 public:
 	BOOL BeginCreateMesh(const BasicVertex* pVertexList, DWORD dwVertexNum, DWORD dwTriGroupCount);
 	BOOL InsertTriGroup(const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFileName);
-	//void DeleteTriGroup(INDEXED_TRI_GROUP* pTriGroup);
 	void EndCreateMesh();
 
 private:
@@ -46,11 +45,6 @@ private:
 
 	BOOL InitRootSignature();
 	BOOL InitPipelineState();
-
-private:
-	// Clean Up
-	void CleanUp();
-	void CleanupSharedResources();
 
 private:
 	// 모든 BasicMeshObject 아래 3가지를 객체들이 공유함

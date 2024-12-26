@@ -81,6 +81,10 @@ std::shared_ptr<void> g_pSprite1 = nullptr;
 std::shared_ptr<void> g_pSprite2 = nullptr;
 std::shared_ptr<void> g_pSprite3 = nullptr;
 std::shared_ptr<void> g_pTexHandle0 = nullptr;
+std::shared_ptr<void> g_pDynamicTexHandle = nullptr;
+BYTE* g_pImage = nullptr;
+UINT g_ImageWidth = 0;
+UINT g_ImageHeight = 0;
 
 float g_fRot0 = 0.f;
 float g_fRot1 = 0.f;
@@ -119,7 +123,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY13SPRITE, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY14DYNAMICTEXTURE, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -129,7 +133,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY13SPRITE));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY14DYNAMICTEXTURE));
 
     MSG msg;
 
@@ -142,6 +146,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     g_pMeshObj0 = CreateBoxMeshObject();
     g_pMeshObj1 = CreateQuadMesh();
+
+    // create sprite
+
+    g_ImageWidth = 512;
+    g_ImageHeight = 256;
+    g_pImage = (BYTE*)malloc(g_ImageWidth * g_ImageHeight * 4);
+    DWORD* pDest = (DWORD*)g_pImage;
+    for (DWORD y = 0; y < g_ImageHeight; y++)
+    {
+        for (DWORD x = 0; x < g_ImageWidth; x++)
+        {
+            pDest[x + g_ImageWidth * y] = 0xff0000ff;
+        }
+    }
+    g_pDynamicTexHandle = g_pRenderer->CreateDynamicTexture(g_ImageWidth, g_ImageHeight);
 
     g_pTexHandle0 = g_pRenderer->CreateTextureFromFile(L"tex_00.dds");
     g_pSpriteObjCommon = g_pRenderer->CreateSpriteObject();
@@ -175,7 +194,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (g_pRenderer)
         g_pRenderer.reset();
 
-
     // for crtcheck test
     //char* byte = new char[100];
     //memset(byte, 'a', 100);
@@ -183,8 +201,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #ifdef _DEBUG
     //_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     //_CrtDumpMemoryLeaks();
-    //_ASSERT(_CrtCheckMemory());
-    ComLeakCheck();
+    _ASSERT(_CrtCheckMemory());
+    //ComLeakCheck();
 #endif _DEBUG
 
     return (int)msg.wParam;
@@ -221,25 +239,28 @@ void RunGame()
     rect.top = 0;
     rect.right = 256;
     rect.bottom = 256;
-    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 0, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 0, 0.5f, 0.5f, &rect, 0.0f, g_pTexHandle0);
 
     rect.left = 256;
     rect.top = 0;
     rect.right = 512;
     rect.bottom = 256;
-    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 0, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 0, 0.5f, 0.5f, &rect, 0.0f, g_pTexHandle0);
 
     rect.left = 0;
     rect.top = 256;
     rect.right = 256;
     rect.bottom = 512;
-    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 256 + 5, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 256 + 5, 0.5f, 0.5f, &rect, 0.0f, g_pTexHandle0);
 
     rect.left = 256;
     rect.top = 256;
     rect.right = 512;
     rect.bottom = 512;
-    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 256 + 5, 0.5f, 0.5f, rect, 0.0f, g_pTexHandle0);
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 256 + 5, 256 + 5, 0.5f, 0.5f, &rect, 0.0f, g_pTexHandle0);
+
+    // render dynamic texture
+    g_pRenderer->RenderSpriteWithTex(g_pSpriteObjCommon, 0, 256 + 5 + 256 + 5, 0.5f, 0.5f, nullptr, 0.0f, g_pDynamicTexHandle);
 
     g_pRenderer->RenderSprite(g_pSprite0, 512 + 10, 0, 0.5f, 0.5f, 1.f);
     g_pRenderer->RenderSprite(g_pSprite1, 512 + 10 + 10 + 256, 0, 0.5f, 0.5f, 1.f);
@@ -331,6 +352,71 @@ void Update()
     {
         g_fRot2 = 0.0f;
     }
+
+
+    // Update Texture
+    static DWORD g_dwCount = 0;
+    static DWORD g_dwTileColorR = 0;
+    static DWORD g_dwTileColorG = 0;
+    static DWORD g_dwTileColorB = 0;
+
+    const DWORD TILE_WIDTH = 16;
+    const DWORD TILE_HEIGHT = 16;
+
+    DWORD TILE_WIDTH_COUNT = g_ImageWidth / TILE_WIDTH;
+    DWORD TILE_HEIGHT_COUNT = g_ImageHeight / TILE_HEIGHT;
+
+    if (g_dwCount >= TILE_WIDTH_COUNT * TILE_HEIGHT_COUNT)
+    {
+        g_dwCount = 0;
+    }
+    DWORD TileY = g_dwCount / TILE_WIDTH_COUNT;
+    DWORD TileX = g_dwCount % TILE_WIDTH_COUNT;
+
+    DWORD StartX = TileX * TILE_WIDTH;
+    DWORD StartY = TileY * TILE_HEIGHT;
+
+
+    //DWORD r = rand() % 256;
+    //DWORD g = rand() % 256;
+    //DWORD b = rand() % 256;
+
+    DWORD r = g_dwTileColorR;
+    DWORD g = g_dwTileColorG;
+    DWORD b = g_dwTileColorB;
+
+
+    DWORD* pDest = (DWORD*)g_pImage;
+    for (DWORD y = 0; y < 16; y++)
+    {
+        for (DWORD x = 0; x < 16; x++)
+        {
+            if (StartX + x >= g_ImageWidth)
+                __debugbreak();
+
+            if (StartY + y >= g_ImageHeight)
+                __debugbreak();
+
+            pDest[(StartX + x) + (StartY + y) * g_ImageWidth] = 0xff000000 | (b << 16) | (g << 8) | r;
+        }
+    }
+    g_dwCount++;
+    g_dwTileColorR += 8;
+    if (g_dwTileColorR > 255)
+    {
+        g_dwTileColorR = 0;
+        g_dwTileColorG += 8;
+    }
+    if (g_dwTileColorG > 255)
+    {
+        g_dwTileColorG = 0;
+        g_dwTileColorB += 8;
+    }
+    if (g_dwTileColorB > 255)
+    {
+        g_dwTileColorB = 0;
+    }
+    g_pRenderer->UpdateTextureWithImage(g_pDynamicTexHandle, g_pImage, g_ImageWidth, g_ImageHeight);
 }
 
 std::shared_ptr<void> CreateBoxMeshObject()
@@ -423,10 +509,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY13SPRITE));
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY14DYNAMICTEXTURE));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY13SPRITE);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY14DYNAMICTEXTURE);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 

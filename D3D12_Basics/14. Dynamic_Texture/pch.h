@@ -35,6 +35,7 @@ using namespace std::literals;
 
 #include "typedef.h"
 #include "D3DUtil.h"
+#include "LinkedList.h"
 
 // Debugs
 #ifdef _DEBUG
@@ -42,8 +43,6 @@ using namespace std::literals;
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #define new new(_NORMAL_BLOCK, __FILE__, __LINE__)
-
-#include <dxgidebug.h>
 
 #endif _DEBUG
 

@@ -18,7 +18,7 @@ BasicMeshObject::BasicMeshObject()
 
 BasicMeshObject::~BasicMeshObject()
 {
-	//CleanUp();
+	m_dwInitRefCount--;
 }
 
 BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
@@ -348,47 +348,4 @@ BOOL BasicMeshObject::InitPipelineState()
 	}
 
 	return TRUE;
-}
-
-void BasicMeshObject::CleanUp()
-{
-	if (!m_TriGroupList.empty())
-	{
-		for (DWORD i = 0; i < m_dwTriGroupCount; i++)
-		{
-			if (m_TriGroupList[i].pIndexBuffer)
-			{
-				m_TriGroupList[i].pIndexBuffer->Release();
-			}
-			if (m_TriGroupList[i].pTexHandle)
-			{
-				m_pRenderer->DeleteTexture(std::static_pointer_cast<void>(m_TriGroupList[i].pTexHandle));
-			}
-		}
-	}
-
-	if (m_pVertexBuffer)
-	{
-		m_pVertexBuffer->Release();
-	}
-	CleanupSharedResources();
-}
-
-void BasicMeshObject::CleanupSharedResources()
-{
-	if (!m_dwInitRefCount)
-		return;
-
-	DWORD ref_count = --m_dwInitRefCount;
-	if (!ref_count)
-	{
-		if (m_pRootSignature)
-		{
-			m_pRootSignature->Release();
-		}
-		if (m_pPipelineState)
-		{
-			m_pPipelineState->Release();
-		}
-	}
 }

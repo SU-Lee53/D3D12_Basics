@@ -46,6 +46,7 @@ private:
 public:
 	// Basic Mesh Functions
 	std::shared_ptr<void> CreateBasicMeshObject();
+	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
 
 	BOOL BeginCreateMesh(std::shared_ptr<void>& prefMeshObjHandle, const BasicVertex* pVertexList, DWORD dwVertexCount, DWORD dwTriGroupCount);
 	BOOL InsertTriGroup(std::shared_ptr<void>& prefMeshObjHandle, const WORD* pIndexList, DWORD dwTriCount, const WCHAR* wchTexFilename);
@@ -56,8 +57,8 @@ public:
 	// Sprite Functions
 	std::shared_ptr<void> CreateSpriteObject();
 	std::shared_ptr<void> CreateSpriteObject(const std::wstring wstrFilename, int PosX, int PosY, int Width, int Height);
-
-	void RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT& pRect, float Z, std::shared_ptr<void>& pTexHandle);
+	void DeleteSpriteObject(std::shared_ptr<void> pSpriteHandle);
+	void RenderSpriteWithTex(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, const RECT* pRect, float Z, std::shared_ptr<void>& pTexHandle);
 	void RenderSprite(std::shared_ptr<void>& pSpriteHandle, int iPosX, int iPosY, float fScaleX, float fScaleY, float Z);
 
 
@@ -65,8 +66,11 @@ public:
 	std::shared_ptr<void> CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b);
 	std::shared_ptr<void> CreateTextureFromFile(const WCHAR* wchFilename);
 	// 종료시가 아닌 런타임에 임의로 텍스쳐를 제거할 수도 있음
-	
+	void DeleteTexture(std::shared_ptr<void>& pHandle);
 
+	std::shared_ptr<void> CreateDynamicTexture(UINT TexWidth, UINT TexHeight);
+	void UpdateTextureWithImage(std::shared_ptr<void>& pTexHandle, const BYTE* pSrcBits, UINT srcWidth, UINT srcHeight);
+	
 public:
 	// Getter
 	ComPtr<ID3D12Device5>& GetDevice() { return m_pD3DDevice; }
@@ -87,22 +91,11 @@ public:
 	DWORD GetScreenWidth() { return m_dwWidth; }
 	DWORD GetScreenHeight() { return m_dwHeight; }
 
-public:
-	// Object Deleter
-	void DeleteBasicMeshObject(std::shared_ptr<void>& pMeshObjHandle);
-	void DeleteSpriteObject(std::shared_ptr<void>& pMeshObjHandle);
-	void DeleteTexture(std::shared_ptr<void>& pHandle);
-
 private:
-	// CleanUp
-	void CleanUp();
+	// Texture Allocate
+	std::shared_ptr<TEXTURE_HANDLE> AllocTextureHandle();
+	void FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE>& pTexHandle);
 
-	void CleanupDescriptorHeapForRTV();
-	void CleanupDescriptorHeapForDSV();
-
-	void CleanupCommandList();
-	void CleanupFence();
-	
 
 private:
 	HWND m_hWnd = nullptr;
@@ -150,5 +143,11 @@ private:
 
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
 	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;
+
+	// Allocated Texture List
+	SORT_LINK* m_pTexLinkHead = nullptr;
+	SORT_LINK* m_pTexLinkTail = nullptr;
+
+
 };
 

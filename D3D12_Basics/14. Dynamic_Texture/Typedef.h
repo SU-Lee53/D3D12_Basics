@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include "LinkedList.h"
 using namespace DirectX;
 
 struct BasicVertex
@@ -61,10 +62,19 @@ struct CONSTANT_BUFFER_PROPERTY
 	UINT Size;
 };
 
+//struct TEXTURE_HANDLE
+//{
+//	ComPtr<ID3D12Resource> pTexResource;
+//	D3D12_CPU_DESCRIPTOR_HANDLE srv;
+//};
+
 struct TEXTURE_HANDLE
 {
 	ComPtr<ID3D12Resource> pTexResource;
+	ComPtr<ID3D12Resource> pUploadBuffer;
 	D3D12_CPU_DESCRIPTOR_HANDLE srv;
+	BOOL bUpdated;
+	SORT_LINK Link;
 };
 
 struct TVERTEX
