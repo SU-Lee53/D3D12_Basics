@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "13. Sprite", "13. Sprite\13
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "14. Dynamic_Texture", "14. Dynamic_Texture\14. Dynamic_Texture.vcxproj", "{9C092A80-9F40-4848-8603-5FA61238A068}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "15. Text_Rendering", "15. Text_Rendering\15. Text_Rendering.vcxproj", "{05107DC6-D89F-45DF-A233-E3280B075597}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -155,6 +157,14 @@ Global
 		{9C092A80-9F40-4848-8603-5FA61238A068}.Release|x64.Build.0 = Release|x64
 		{9C092A80-9F40-4848-8603-5FA61238A068}.Release|x86.ActiveCfg = Release|Win32
 		{9C092A80-9F40-4848-8603-5FA61238A068}.Release|x86.Build.0 = Release|Win32
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Debug|x64.ActiveCfg = Debug|x64
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Debug|x64.Build.0 = Debug|x64
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Debug|x86.ActiveCfg = Debug|Win32
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Debug|x86.Build.0 = Debug|Win32
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Release|x64.ActiveCfg = Release|x64
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Release|x64.Build.0 = Release|x64
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Release|x86.ActiveCfg = Release|Win32
+		{05107DC6-D89F-45DF-A233-E3280B075597}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -174,6 +184,7 @@ Global
 		{2F3FAFC5-9C7B-4B7F-9959-21F66B016D5A} = {2481A5A6-DBF8-41B8-BE40-8152CF1A5332}
 		{F249D7AE-3D01-4A0C-A261-29D4100EE46A} = {6621553D-7FAA-45FF-B354-13B9092F99CC}
 		{9C092A80-9F40-4848-8603-5FA61238A068} = {6621553D-7FAA-45FF-B354-13B9092F99CC}
+		{05107DC6-D89F-45DF-A233-E3280B075597} = {6621553D-7FAA-45FF-B354-13B9092F99CC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F29768E0-749A-4A7A-A1C7-13DC289E1297}
