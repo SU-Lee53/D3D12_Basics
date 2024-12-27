@@ -22,8 +22,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f6dd16ac-9ec2-4aed-89bc-8381cdc3466b}</ProjectGuid>
-    <RootNamespace>My16TextureManager</RootNamespace>
+    <ProjectGuid>{23862968-b716-4a62-b077-b56cbf1fc5b6}</ProjectGuid>
+    <RootNamespace>My17SimpleGameFramework</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -146,7 +146,7 @@
     <ClInclude Include="DescriptorPool.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="HashTable.h" />
+    <ClInclude Include="IndexCreator.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SimpleConstantBufferPool.h" />
@@ -158,10 +158,10 @@
     <ClInclude Include="VertexUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="16. Texture_Manager.rc" />
+    <ResourceCompile Include="17. SimpleGameFramework.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="16. Texture_Manager.ico" />
+    <Image Include="17. SimpleGameFramework.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -175,7 +175,7 @@
     </ClCompile>
     <ClCompile Include="DescriptorPool.cpp" />
     <ClCompile Include="FontManager.cpp" />
-    <ClCompile Include="HashTable.cpp" />
+    <ClCompile Include="IndexCreator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -191,7 +191,6 @@
     <FxCompile Include="Shaders\shSprite.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="16. TextureManager.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

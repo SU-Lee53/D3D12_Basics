@@ -132,7 +132,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY16TEXTUREMANAGER, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY17SIMPLEGAMEFRAMEWORK, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -142,7 +142,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY16TEXTUREMANAGER));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY17SIMPLEGAMEFRAMEWORK));
 
     MSG msg;
 
@@ -554,10 +554,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY16TEXTUREMANAGER));
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY17SIMPLEGAMEFRAMEWORK));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY16TEXTUREMANAGER);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY17SIMPLEGAMEFRAMEWORK);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 

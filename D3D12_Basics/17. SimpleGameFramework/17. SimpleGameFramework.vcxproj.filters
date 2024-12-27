@@ -2,72 +2,69 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="DirectXTex">
-      <UniqueIdentifier>{99becb35-a1a6-40f2-85a2-02f9b62d5243}</UniqueIdentifier>
+      <UniqueIdentifier>{42fc3f5a-8f13-493d-bd69-4d39c836a8e3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{2bf81599-277c-4f1d-b11f-ad8a51bebbe0}</UniqueIdentifier>
+      <UniqueIdentifier>{2a49d53d-0222-4822-a14f-e35ec8ce3f1a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Main Entry">
-      <UniqueIdentifier>{3c81a3d1-d447-47cd-94e2-d9ce1e16ab24}</UniqueIdentifier>
+      <UniqueIdentifier>{39bdcead-bbc4-482a-9a60-b2c0cdb03955}</UniqueIdentifier>
     </Filter>
     <Filter Include="pch">
-      <UniqueIdentifier>{c6414126-a9ac-4157-ae4d-9d1a5d1f491f}</UniqueIdentifier>
+      <UniqueIdentifier>{33c04ce3-0bfb-4adc-a1e0-0bc4fde1cada}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer">
-      <UniqueIdentifier>{16e39453-d83c-4040-a4cb-33945e1069f9}</UniqueIdentifier>
+      <UniqueIdentifier>{7257ecd3-30a1-480d-9229-d3a5f98a92b3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{887bd318-30c6-4887-a5b9-a9cf3d21eb48}</UniqueIdentifier>
+      <UniqueIdentifier>{ef766e65-b0f6-4e9c-a77d-a6416187530c}</UniqueIdentifier>
     </Filter>
     <Filter Include="typdef">
-      <UniqueIdentifier>{52a355af-f9e1-4fa3-a30b-7112b02df267}</UniqueIdentifier>
+      <UniqueIdentifier>{8ddaf1dc-0c77-4afa-8410-9306ebaa6d2b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Util">
-      <UniqueIdentifier>{e687bf10-c882-4b12-b62e-1ad3ffd24fb0}</UniqueIdentifier>
+      <UniqueIdentifier>{73f8aa60-440c-4f46-8eeb-3586d8410997}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\ConstantBufferManager">
-      <UniqueIdentifier>{c376c56b-9e11-45f8-ab51-d5749740608a}</UniqueIdentifier>
+      <UniqueIdentifier>{73e37cf8-5c45-487c-99b4-cd906e074ef0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\ConstantBufferPool">
-      <UniqueIdentifier>{51aad33e-6ce5-4eeb-8e31-38adb293d3ce}</UniqueIdentifier>
+      <UniqueIdentifier>{da39ad1d-9a5c-4c67-80df-66a0958825a7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\D3D12Renderer">
-      <UniqueIdentifier>{ef3ffa65-1e5c-44b8-9a8d-7666c4be922d}</UniqueIdentifier>
+      <UniqueIdentifier>{7b55c780-e27f-4b8f-88d4-952edea1fb90}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\DescriptorPool">
-      <UniqueIdentifier>{8afb97c9-c063-46b9-a71f-4059fe2c35ba}</UniqueIdentifier>
+      <UniqueIdentifier>{9a802704-a542-4ff1-81dd-d4275d9818c4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\FontManager">
-      <UniqueIdentifier>{1d82741e-5222-4fcc-be42-bd6a789d6d0b}</UniqueIdentifier>
+      <UniqueIdentifier>{c2da0a5d-7fbc-4151-9ed2-821c6d826681}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\ResourceManager">
-      <UniqueIdentifier>{e16f1536-078b-43a2-a78b-e6eb30546ec1}</UniqueIdentifier>
+      <UniqueIdentifier>{feb8971d-c460-4c7d-acc2-ff91e3ab3309}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\Shader">
-      <UniqueIdentifier>{f12207d7-7519-4fea-9ea4-c6487dc1f507}</UniqueIdentifier>
+      <UniqueIdentifier>{32285141-7317-4f13-8473-867709e163ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\SingleDescriptorAllocator">
-      <UniqueIdentifier>{2c7cffbe-7275-47a2-92e5-8972cb18a2b7}</UniqueIdentifier>
+      <UniqueIdentifier>{d0dad4b7-da3e-4614-a6e0-75504f4ca8c2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\SpriteObject">
-      <UniqueIdentifier>{e3cb40bf-e3b0-40bc-8822-78d881e82368}</UniqueIdentifier>
+      <UniqueIdentifier>{4b2d59a9-8279-4f6a-8b33-6848513b16e4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\TextureManager">
-      <UniqueIdentifier>{43fa58b6-17b3-4dbe-a72c-3ba7faeaa633}</UniqueIdentifier>
+      <UniqueIdentifier>{36a9160f-0b52-4a0e-9dae-886b6864b52f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\BasicMeshObject">
-      <UniqueIdentifier>{2e1aa3dc-4c41-423d-965d-398fe6244562}</UniqueIdentifier>
+      <UniqueIdentifier>{e903f3c8-964d-43bf-a3ee-1eb4d756f56c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="D3DUtil.h">
+      <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="BasicMeshObject.h">
+      <Filter>Renderer\BasicMeshObject</Filter>
     </ClInclude>
     <ClInclude Include="ConstantBufferManager.h">
       <Filter>Renderer\ConstantBufferManager</Filter>
@@ -78,8 +75,14 @@
     <ClInclude Include="D3D12ResourceManager.h">
       <Filter>Renderer\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="D3DUtil.h">
-      <Filter>Util</Filter>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader12.h">
       <Filter>DirectXTex</Filter>
@@ -89,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="FontManager.h">
       <Filter>Renderer\FontManager</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexCreator.h">
+      <Filter>Util</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>pch</Filter>
@@ -102,6 +108,9 @@
     <ClInclude Include="SpriteObject.h">
       <Filter>Renderer\SpriteObject</Filter>
     </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>Renderer\TextureManager</Filter>
+    </ClInclude>
     <ClInclude Include="Typedef.h">
       <Filter>typdef</Filter>
     </ClInclude>
@@ -111,18 +120,9 @@
     <ClInclude Include="..\DirectXTex\DirectXTex.h">
       <Filter>DirectXTex</Filter>
     </ClInclude>
-    <ClInclude Include="HashTable.h">
-      <Filter>Util</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureManager.h">
-      <Filter>Renderer\TextureManager</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicMeshObject.h">
-      <Filter>Renderer\BasicMeshObject</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="16. Texture_Manager.ico">
+    <Image Include="17. SimpleGameFramework.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="small.ico">
@@ -130,11 +130,12 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="16. Texture_Manager.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="D3DUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicMeshObject.cpp">
+      <Filter>Renderer\BasicMeshObject</Filter>
+    </ClCompile>
     <ClCompile Include="ConstantBufferManager.cpp">
       <Filter>Renderer\ConstantBufferManager</Filter>
     </ClCompile>
@@ -144,9 +145,6 @@
     <ClCompile Include="D3D12ResourceManager.cpp">
       <Filter>Renderer\ResourceManager</Filter>
     </ClCompile>
-    <ClCompile Include="D3DUtil.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
     <ClCompile Include="DDSTextureLoader12.cpp">
       <Filter>DirectXTex</Filter>
     </ClCompile>
@@ -155,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="FontManager.cpp">
       <Filter>Renderer\FontManager</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexCreator.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Main Entry</Filter>
@@ -171,18 +172,17 @@
     <ClCompile Include="SpriteObject.cpp">
       <Filter>Renderer\SpriteObject</Filter>
     </ClCompile>
-    <ClCompile Include="VertexUtil.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="HashTable.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
     <ClCompile Include="TextureManager.cpp">
       <Filter>Renderer\TextureManager</Filter>
     </ClCompile>
-    <ClCompile Include="BasicMeshObject.cpp">
-      <Filter>Renderer\BasicMeshObject</Filter>
+    <ClCompile Include="VertexUtil.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="17. SimpleGameFramework.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\shBasicMesh.hlsl">
@@ -194,6 +194,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="16. TextureManager.md" />
   </ItemGroup>
 </Project>
