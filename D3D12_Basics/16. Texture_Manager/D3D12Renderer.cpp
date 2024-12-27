@@ -9,6 +9,7 @@
 #include "ConstantBufferManager.h"
 #include "SpriteObject.h"
 #include "FontManager.h"
+#include "TextureManager.h"
 
 using namespace std;
 
@@ -27,6 +28,7 @@ D3D12Renderer::~D3D12Renderer()
 	}
 
 	// ComPtr을 사용하므로 별도의 CleanUp 은 필요없을것으로 생각됨
+	m_pFontManager.reset();
 }
 
 BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
@@ -232,10 +234,13 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	CreateFence();
 
 	m_pFontManager = make_shared<FontManager>();
-	m_pFontManager->Initialize(shared_from_this(), m_pCommandQueue, 1024,256, bEnableDebugLayer);
+	m_pFontManager->Initialize(shared_from_this(), m_pCommandQueue, 1024, 256, bEnableDebugLayer);
 
 	m_pResourceManager = make_shared<D3D12ResourceManager>();
 	m_pResourceManager->Initialize(m_pD3DDevice);
+
+	m_pTextureManager = make_shared<TextureManager>();
+	m_pTextureManager->Initialize(shared_from_this(), 1024 / 16, 1024);
 
 	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
 	{
@@ -682,12 +687,6 @@ void D3D12Renderer::RenderSprite(shared_ptr<void>& pSpriteHandle, int iPosX, int
 
 shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)
 {
-	shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
-
-	BOOL bResult = FALSE;
-	ComPtr<ID3D12Resource> pTexResource = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
-
 	DXGI_FORMAT TexFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	BYTE* pImage = (BYTE*)malloc(TexWidth * TexHeight * 4); // RGBA
 	memset(pImage, 0, TexWidth * TexHeight * 4);
@@ -718,25 +717,7 @@ shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight
 		bFirstColorIsWHite++;
 		bFirstColorIsWHite %= 2;
 	}
-
-	if (m_pResourceManager->CreateTexture(pTexResource, TexWidth, TexHeight, TexFormat, pImage))
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-		SRVDesc.Format = TexFormat;
-		SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		SRVDesc.Texture2D.MipLevels = 1;
-
-		if (m_pSingleDescriptorAllocator->AllocDescriptorHandle(srv))
-		{
-			m_pD3DDevice->CreateShaderResourceView(pTexResource.Get(), &SRVDesc, srv);
-
-			pTexHandle = make_shared<TEXTURE_HANDLE>();
-			pTexHandle->pTexResource = pTexResource;
-			pTexHandle->srv = srv;
-			bResult = true;
-		}
-	}
+	shared_ptr<TEXTURE_HANDLE> pTexHandle = m_pTextureManager->CreateImmutableTexture(TexWidth, TexHeight, TexFormat, pImage);
 
 	free(pImage);
 	pImage = nullptr;
@@ -744,80 +725,25 @@ shared_ptr<void> D3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight
 	return pTexHandle;
 }
 
-shared_ptr<void> D3D12Renderer::CreateTextureFromFile(const WCHAR* wchFilename)
+shared_ptr<void> D3D12Renderer::CreateTextureFromFile(const wstring& wchFilename)
 {
-	shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
-
-	ComPtr<ID3D12Resource> pTexResource = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
-
-	DXGI_FORMAT TexFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	D3D12_RESOURCE_DESC desc = {};
-	if (m_pResourceManager->CreateTextureFromFile(pTexResource, desc, wchFilename))
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-		SRVDesc.Format = desc.Format;
-		SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		SRVDesc.Texture2D.MipLevels = desc.MipLevels;
-
-		if (m_pSingleDescriptorAllocator->AllocDescriptorHandle(srv))
-		{
-			m_pD3DDevice->CreateShaderResourceView(pTexResource.Get(), &SRVDesc, srv);
-
-			pTexHandle = AllocTextureHandle();
-			pTexHandle->pTexResource = pTexResource;
-			pTexHandle->srv = srv;
-		}
-	}
-
+	shared_ptr<TEXTURE_HANDLE> pTexHandle = m_pTextureManager->CreateTextureFromFile(wchFilename);
 	return pTexHandle;
 }
 
 void D3D12Renderer::DeleteTexture(shared_ptr<void>& pHandle)
 {
-	shared_ptr<TEXTURE_HANDLE> pTexHandle = static_pointer_cast<TEXTURE_HANDLE>(pHandle);
-	ComPtr<ID3D12Resource> pTexResource = pTexHandle->pTexResource;
-	D3D12_CPU_DESCRIPTOR_HANDLE srv = pTexHandle->srv;
-
-	pTexResource.Reset();
-	m_pSingleDescriptorAllocator->FreeDescriptorHandle(srv);
-
-	pTexHandle.reset();
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+	m_pTextureManager->DeleteTexture(static_pointer_cast<TEXTURE_HANDLE>(pHandle));
 }
 
 shared_ptr<void> D3D12Renderer::CreateDynamicTexture(UINT TexWidth, UINT TexHeight)
 {
-	shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
-
-	ComPtr<ID3D12Resource> pTexResource = nullptr;
-	ComPtr<ID3D12Resource> pUploadBuffer = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
-
-	DXGI_FORMAT TexFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-	if (m_pResourceManager->CreateTexturePair(pTexResource, pUploadBuffer, TexWidth, TexHeight, TexFormat))
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-		SRVDesc.Format = TexFormat;
-		SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		SRVDesc.Texture2D.MipLevels = 1;
-
-		if (m_pSingleDescriptorAllocator->AllocDescriptorHandle(srv))
-		{
-			m_pD3DDevice->CreateShaderResourceView(pTexResource.Get(), &SRVDesc, srv);
-
-			pTexHandle = AllocTextureHandle();
-			pTexHandle->pTexResource = pTexResource;
-			pTexHandle->pUploadBuffer = pUploadBuffer;
-			pTexHandle->srv = srv;
-		}
-	}
-
+	shared_ptr<TEXTURE_HANDLE> pTexHandle = m_pTextureManager->CreateDynamicTexture(TexWidth, TexHeight);
 	return pTexHandle;
-
-
 }
 
 void D3D12Renderer::UpdateTextureWithImage(shared_ptr<void>& pTexHandle, const BYTE* pSrcBits, UINT srcWidth, UINT srcHeight)
@@ -902,18 +828,4 @@ BOOL D3D12Renderer::WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT Des
 shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
 {
 	return m_pConstantBufferManagers[m_dwCurContextIndex]->GetConstantBufferPool(type);
-}
-
-shared_ptr<TEXTURE_HANDLE> D3D12Renderer::AllocTextureHandle()
-{
-	shared_ptr<TEXTURE_HANDLE> pTexHandle = make_shared<TEXTURE_HANDLE>();
-	pTexHandle->Link.pItem = pTexHandle;
-	LinkToLinkedListFIFO(&m_pTexLinkHead, &m_pTexLinkTail, &pTexHandle->Link);
-	return pTexHandle;
-}
-
-void D3D12Renderer::FreeTextureHandle(shared_ptr<TEXTURE_HANDLE>& pTexHandle)
-{
-	UnLinkFromLinkedList(&m_pTexLinkHead, &m_pTexLinkTail, &pTexHandle->Link);
-	pTexHandle.reset();
 }
