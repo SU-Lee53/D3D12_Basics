@@ -297,11 +297,7 @@ void D3D12Renderer::BeginRender()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pRTVHeap->GetCPUDescriptorHandleForHeapStart(), m_uiRenderTargetIndex, m_uiRTVDescriptorSize);
 	
 	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pRenderTargets[m_uiRenderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-	// 위 코드에서 l-value 에러가 발생하면 프로젝트 설정 -> C/C++ -> Launguage 에서 Conformance Mode 를 Off
-	// 생각해보면 안되는게 이해가 안되는건 아니지만 MS의 공식 샘플에서도 사용되는 방식
-	// 해당 샘플에서도 오류 발생시 위 방법을 권장함
-	// https://stackoverflow.com/questions/65315241/how-can-i-fix-requires-l-value
-
+	
 	// DSV Heap 의 선두번지 가져옴
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_pDSVHeap->GetCPUDescriptorHandleForHeapStart());
 

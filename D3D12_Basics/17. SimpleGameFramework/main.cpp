@@ -14,6 +14,11 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
+// PIX
+#pragma comment(lib, "../PIX/Bin/x64/WinPixEventRuntime.lib")
+#include "../packages/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/pix3.h"
+
+
 // 지금 예제코드랑 다르게 ARM용 DirectXTex 를 컴파일을 못하겠음...
 // 어차피 지금은 안쓰니 그냥 넘어감
 //#if defined(_M_ARM64EC) || defined(_M_ARM64)

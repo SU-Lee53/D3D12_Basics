@@ -18,7 +18,7 @@ public:
 private:
 	BOOL CreateD2D(ComPtr<ID3D12Device>& pD3DDevice, ComPtr<ID3D12CommandQueue>& pCommandQueue, BOOL bEnableDebugLayer);
 	BOOL CreateDWrite(ComPtr<ID3D12Device>& pD3DDevice, UINT TexWidth, UINT TexHeight, float fDPI);
-	BOOL CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, ComPtr<IDWriteTextFormat>& pTextFormat, const std::wstring& wchString, DWORD dwLen);
+	BOOL CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, ComPtr<IDWriteTextFormat>& pTextFormat, const WCHAR* wchString, DWORD dwLen);
 	
 private:
 	void CleanUp();

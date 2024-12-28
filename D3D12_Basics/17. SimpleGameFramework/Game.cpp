@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#include <iostream>
+
 Game::Game()
 {
 }
@@ -33,7 +35,7 @@ BOOL Game::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
 	m_pSpriteObjCommon = m_pRenderer->CreateSpriteObject();
 
 	const DWORD GAME_OBJ_COUNT = 1000;
-	for (DWORD i = 0; i < GAME_OBJ_COUNT / 10; i++)
+	for (DWORD i = 0; i < GAME_OBJ_COUNT / 100; i++)
 	{
 		shared_ptr<GameObject> pGameObj = CreateGameObject();
 		if (pGameObj)
@@ -106,14 +108,14 @@ BOOL Game::Update(ULONGLONG CurTick)
 
 	if (wcscmp(m_wchText, wchTxt))
 	{
+		m_testTextUpdatedCount++;
 		// 텍스트가 변경된 경우
 		memset(m_pTextImage, 0, m_TextImageWidth * m_TextImageHeight * 4);
 		
-		// 15번째 업데이트에서 무조건 1번 메모리가 튄다...? 
+		// 16번째 업데이트에서 무조건 1번 메모리가 튄다...? 
 		m_pRenderer->WriteTextToBitmap(m_pTextImage, m_TextImageWidth, m_TextImageHeight, m_TextImageWidth * 4, iTextWidth, iTextHeight, m_pFontObj, wchTxt, dwTxtLen);
 		m_pRenderer->UpdateTextureWithImage(m_pTextTexTexHandle, m_pTextImage, m_TextImageWidth, m_TextImageHeight);
 		wcscpy_s(m_wchText, wchTxt);
-		m_testTextUpdatedCount++;
 	}
 
 	return TRUE;
@@ -193,20 +195,41 @@ BOOL Game::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight)
 
 void Game::Render()
 {
+	UINT64 startTime;
+	UINT64 beginRenderTime;
+	UINT64 afterRenderTime;
+	UINT64 EndRenderTime;
+	UINT64 PresentTime;
+
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&startTime));
 	m_pRenderer->BeginRender();
 
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&beginRenderTime));
+
 	DWORD dwObjCount = 0;
-	//for (auto& obj : m_pGameObjList)
-	//{
-	//	obj->Render();
-	//	dwObjCount++;
-	//}
+	for (auto& obj : m_pGameObjList)
+	{
+		obj->Render();
+		dwObjCount++;
+	}
 
 	m_pRenderer->RenderSpriteWithTex(m_pSpriteObjCommon, 512 + 5, 256 + 5 + 256 + 5, 1.f, 1.f, nullptr, 0.f, m_pTextTexTexHandle);
-	
+
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&afterRenderTime));
+
 	m_pRenderer->EndRender();
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&EndRenderTime));
 
 	m_pRenderer->Present();
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&PresentTime));
+
+	UINT64 __A_beginRenderDiff = beginRenderTime - startTime;
+	UINT64 __B_renderDiff = afterRenderTime - beginRenderTime;
+	UINT64 __C_endRenderDiff = EndRenderTime - afterRenderTime;
+	UINT64 __D_presentDiff = PresentTime - EndRenderTime;
+
+	UINT64 __E_FPS = m_FPS;
+
 }
 
 std::shared_ptr<GameObject> Game::CreateGameObject()

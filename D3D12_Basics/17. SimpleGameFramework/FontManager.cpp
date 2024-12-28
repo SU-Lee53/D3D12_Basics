@@ -92,6 +92,11 @@ BOOL FontManager::WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestH
 		D2D1_MAPPED_RECT mappedRect;
 		D2D1_SIZE_U size = m_pD2DTargetBitmapRead->GetPixelSize();
 
+		// 15번째때 아래 Map 에서 메모리가 갑자기 튄다
+
+		MEMORYSTATUSEX statex;
+		statex.dwLength = sizeof(statex);
+
 		if (FAILED(m_pD2DTargetBitmapRead->Map(D2D1_MAP_OPTIONS_READ, &mappedRect)))
 		{
 			__debugbreak();
@@ -233,7 +238,7 @@ BOOL FontManager::CreateDWrite(ComPtr<ID3D12Device>& pD3DDevice, UINT TexWidth, 
 	return TRUE;
 }
 
-BOOL FontManager::CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, ComPtr<IDWriteTextFormat>& pTextFormat, const std::wstring& wchString, DWORD dwLen)
+BOOL FontManager::CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, ComPtr<IDWriteTextFormat>& pTextFormat, const WCHAR* wchString, DWORD dwLen)
 {
 	BOOL bResult = FALSE;
 
@@ -246,7 +251,7 @@ BOOL FontManager::CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, Co
 	ComPtr<IDWriteTextLayout> pTextLayout = nullptr;
 	if (pDWFactory && pTextFormat)
 	{
-		if (FAILED(pDWFactory->CreateTextLayout(wchString.c_str(), dwLen, pTextFormat.Get(), max_size.width, max_size.height, pTextLayout.GetAddressOf())))
+		if (FAILED(pDWFactory->CreateTextLayout(wchString, dwLen, pTextFormat.Get(), max_size.width, max_size.height, pTextLayout.GetAddressOf())))
 		{
 			__debugbreak();
 			return bResult;
@@ -268,14 +273,14 @@ BOOL FontManager::CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, Co
 		pD2DDeviceContext->BeginDraw();
 
 		pD2DDeviceContext->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-		
+
 		// 자체적인 변환 행렬을 사용할 수 있지만 일단 변환되지 않도록 Identity로 설정
 		pD2DDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
 
 		pD2DDeviceContext->DrawTextLayout(D2D1::Point2F(0.0f, 0.0f), pTextLayout.Get(), m_pWhiteBrush.Get());
 
 		pD2DDeviceContext->EndDraw();
-		
+
 		// 여기까지 하면 TargetBitmap에 텍스트가 찍힌 텍스쳐가 만들어 짐
 
 		// 안티 앨리어싱 모드 복구
