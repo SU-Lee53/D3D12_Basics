@@ -58,6 +58,9 @@
     <Filter Include="Renderer\BasicMeshObject">
       <UniqueIdentifier>{2e1aa3dc-4c41-423d-965d-398fe6244562}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{1ededaee-192a-48ac-89d1-960c3fc64f4f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -119,6 +122,12 @@
     </ClInclude>
     <ClInclude Include="BasicMeshObject.h">
       <Filter>Renderer\BasicMeshObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -182,6 +191,12 @@
     </ClCompile>
     <ClCompile Include="BasicMeshObject.cpp">
       <Filter>Renderer\BasicMeshObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

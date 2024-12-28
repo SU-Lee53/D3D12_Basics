@@ -1,6 +1,6 @@
 #pragma once
 
-const UINT SWAP_CHAIN_FRAME_COUNT = 4;
+const UINT SWAP_CHAIN_FRAME_COUNT = 3;
 
 // Pending : "보류중인" 이라는 뜻
 // 화면에 그려지는 전면버퍼 하나 빼고 나머지 후면버퍼들의 갯수를 말함
@@ -17,7 +17,7 @@ class TextureManager;
 
 class D3D12Renderer : public std::enable_shared_from_this<D3D12Renderer>
 {
-	const static UINT MAX_DRAW_COUNT_PER_FRAME = 256;
+	const static UINT MAX_DRAW_COUNT_PER_FRAME = 1024;
 	static const UINT MAX_DESCRIPTOR_COUNT = 4096;
 
 public:
@@ -31,6 +31,7 @@ public:
 	void Present();
 	BOOL UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight);
 
+
 private:
 	BOOL CreateDescripterHeapForRTV();
 	BOOL CreateDescripterHeapForDSV();
@@ -39,7 +40,13 @@ private:
 	BOOL CreateFence();
 	BOOL CreateDepthStencil(UINT width, UINT height);
 
+public:
+	// Camera Functions
 	void InitCamera();
+	void SetCamera(const XMVECTOR& refCamPos, const XMVECTOR& refCamDir, const XMVECTOR& refCamUp);
+	void GetCameraPos(float& reffOutX, float& reffOutY, float& reffOutZ);
+	void MoveCamera(float x, float y, float z);
+	void SetCameraPos(float x, float y, float z);
 
 private:
 	UINT64 Fence();
@@ -76,7 +83,7 @@ public:
 	// Text Functions
 	std::shared_ptr<void> CreateFontObject(const std::wstring& wchFontFamilyName, float fFontSize);
 	void	DeleteFontObject(std::shared_ptr<void>& pFontHandle);
-	BOOL	WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& piOutWidth, int& piOutHeight, std::shared_ptr<void>& pFontObjHandle, const std::wstring& wchString, DWORD dwLen);
+	BOOL	WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& piOutWidth, int& piOutHeight, std::shared_ptr<void>& pFontObjHandle, const WCHAR* wchString, DWORD dwLen);
 
 public:
 	// Getter
@@ -98,8 +105,14 @@ public:
 	DWORD GetScreenWidth() { return m_dwWidth; }
 	DWORD GetScreenHeight() { return m_dwHeight; }
 	DWORD GetDPI() { return m_fDPI; }
-
+	
 private:
+	void	CleanUp();
+	void	CleanupFence();
+	void	CleanupCommandList();
+	void	CleanupDescriptorHeapForRTV();
+	void	CleanupDescriptorHeapForDSV();
+
 
 
 private:
@@ -110,11 +123,12 @@ private:
 	ComPtr<ID3D12CommandQueue>			m_pCommandQueue = nullptr;
 
 	// Resource for Rendering
-	std::array<ComPtr<ID3D12CommandAllocator>, MAX_PENDING_FRAME_COUNT>				m_pCommandAllocators = {};
-	std::array<ComPtr<ID3D12GraphicsCommandList>, MAX_PENDING_FRAME_COUNT>			m_pCommandLists = {};
-	std::array<std::shared_ptr<DescriptorPool>, MAX_PENDING_FRAME_COUNT>			m_pDescriptorPools = {};
-	std::array<std::shared_ptr<ConstantBufferManager>, MAX_PENDING_FRAME_COUNT>		m_pConstantBufferManagers = {};
-	std::array<UINT64, MAX_PENDING_FRAME_COUNT>										m_ui64LastFenceValues = {};
+	ComPtr<ID3D12CommandAllocator>			m_pCommandAllocators[MAX_PENDING_FRAME_COUNT] = {};
+	ComPtr<ID3D12GraphicsCommandList>		m_pCommandLists[MAX_PENDING_FRAME_COUNT] = {};
+	std::shared_ptr<DescriptorPool>			m_pDescriptorPools[MAX_PENDING_FRAME_COUNT] = {};
+	std::shared_ptr<ConstantBufferManager>	m_pConstantBufferManagers[MAX_PENDING_FRAME_COUNT] = {};
+
+	UINT64 m_ui64LastFenceValues[MAX_PENDING_FRAME_COUNT] = {};
 	UINT64 m_ui64FenceValue = 0;
 
 	// DXGI
@@ -134,18 +148,23 @@ private:
 	std::array<ComPtr<ID3D12Resource>, SWAP_CHAIN_FRAME_COUNT> m_pRenderTargets;
 	ComPtr<ID3D12Resource>			m_pDepthStencil = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pRTVHeap = nullptr;
-	ComPtr<ID3D12DescriptorHeap>	m_pDSVHeap = nullptr;	// 아직 미사용
+	ComPtr<ID3D12DescriptorHeap>	m_pDSVHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pSRVHeap = nullptr;
 	ComPtr<ID3D12Fence>				m_pFence = nullptr;
 	HANDLE							m_hFenceEvent = nullptr;
 	UINT							m_uiRTVDescriptorSize = 0;
 	UINT							m_uiSRVDescriptorSize = 0;
-	UINT							m_uiDSVDescriptorSize = 0;	// 아직 미사용
+	UINT							m_uiDSVDescriptorSize = 0;
 	UINT							m_uiRenderTargetIndex = 0;
 	DWORD							m_dwCurContextIndex = 0;
 
+	// Camera Variables
 	XMMATRIX m_matView = {};
 	XMMATRIX m_matProj = {};
+
+	XMVECTOR m_CamPos = {};
+	XMVECTOR m_CamDir = {};
+
 
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
 	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;

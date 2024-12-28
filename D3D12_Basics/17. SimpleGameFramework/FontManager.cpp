@@ -68,14 +68,13 @@ void FontManager::DeleteFontObject(std::shared_ptr<FONT_HANDLE>& pFontHandle)
 {
 	if (pFontHandle->pTextFormat)
 	{
-		pFontHandle->pTextFormat->Release();
-		pFontHandle->pTextFormat = nullptr;
+		pFontHandle->pTextFormat.Reset();
 	}
 
 	pFontHandle.reset();
 }
 
-BOOL FontManager::WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int refiOutHeight, std::shared_ptr<FONT_HANDLE> pFontHandle, const std::wstring& wchString, DWORD dwLen)
+BOOL FontManager::WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int refiOutHeight, std::shared_ptr<FONT_HANDLE> pFontHandle, const WCHAR* wchString, DWORD dwLen)
 {
 	int iTextWidth = 0;
 	int iTextHeight = 0;
@@ -91,6 +90,7 @@ BOOL FontManager::WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestH
 			iTextHeight = (int)DestHeight;
 
 		D2D1_MAPPED_RECT mappedRect;
+		D2D1_SIZE_U size = m_pD2DTargetBitmapRead->GetPixelSize();
 
 		if (FAILED(m_pD2DTargetBitmapRead->Map(D2D1_MAP_OPTIONS_READ, &mappedRect)))
 		{
@@ -281,6 +281,9 @@ BOOL FontManager::CreateBitmapFromText(int& refiOutWidth, int& refiOutHeight, Co
 		// 救萍 举府绢教 葛靛 汗备
 		pD2DDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_DEFAULT);
 		pD2DDeviceContext->SetTarget(nullptr);
+
+		pTextLayout.Reset();
+		pTextLayout = nullptr;
 	}
 
 	int width = (int)ceil(metrics.width);
@@ -314,22 +317,22 @@ void FontManager::CleanUpDWrite()
 {
 	if (m_pD2DTargetBitmap)
 	{
-		m_pD2DTargetBitmap->Release();
+		m_pD2DTargetBitmap.Reset();
 		m_pD2DTargetBitmap = nullptr;
 	}
 	if (m_pD2DTargetBitmapRead)
 	{
-		m_pD2DTargetBitmapRead->Release();
+		m_pD2DTargetBitmapRead.Reset();
 		m_pD2DTargetBitmapRead = nullptr;
 	}
 	if (m_pWhiteBrush)
 	{
-		m_pWhiteBrush->Release();
+		m_pWhiteBrush.Reset();
 		m_pWhiteBrush = nullptr;
 	}
 	if (m_pDWFactory)
 	{
-		m_pDWFactory->Release();
+		m_pDWFactory.Reset();
 		m_pDWFactory = nullptr;
 	}
 }
@@ -339,12 +342,12 @@ void FontManager::CleanUpD2D()
 
 	if (m_pD2DDeviceContext)
 	{
-		m_pD2DDeviceContext->Release();
+		m_pD2DDeviceContext.Reset();
 		m_pD2DDeviceContext = nullptr;
 	}
 	if (m_pD2DDevice)
 	{
-		m_pD2DDevice->Release();
+		m_pD2DDevice.Reset();
 		m_pD2DDevice = nullptr;
 	}
 }

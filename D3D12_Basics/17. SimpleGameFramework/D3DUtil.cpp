@@ -22,6 +22,7 @@ void D3DUtils::SetDebugLayerInfo(ComPtr<ID3D12Device> pD3DDevice)
 		filter.DenyList.NumIDs = hide.size();
 		filter.DenyList.pIDList = hide.data();
 		pInfoQueue->AddStorageFilterEntries(&filter);
+		pInfoQueue.Reset();
 	}
 }
 

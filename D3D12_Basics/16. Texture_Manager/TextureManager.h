@@ -30,7 +30,7 @@ private:
 
 
 private:
-	std::shared_ptr<D3D12Renderer> m_pRenderer = nullptr;
+	std::weak_ptr<D3D12Renderer> m_pRenderer;
 	std::shared_ptr<D3D12ResourceManager> m_pResourceManager = nullptr;
 	//std::unique_ptr<HashTable> m_pHashTable = nullptr;
 	

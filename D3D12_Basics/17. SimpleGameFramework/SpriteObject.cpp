@@ -9,6 +9,7 @@
 #include "D3DUtil.h"
 
 using namespace DirectX;
+using namespace std;
 
 ComPtr<ID3D12RootSignature> SpriteObject::m_pRootSignature = nullptr;
 ComPtr<ID3D12PipelineState> SpriteObject::m_pPipelineState = nullptr;
@@ -27,6 +28,7 @@ SpriteObject::SpriteObject()
 
 SpriteObject::~SpriteObject()
 {
+	CleanUp();
 }
 
 BOOL SpriteObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
@@ -80,7 +82,7 @@ BOOL SpriteObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer, const WC
 
 BOOL SpriteObject::InitCommonResources()
 {
-	if (m_dwInitRefCount)
+	if (m_dwInitRefCount == 0)
 	{
 		InitRootSignature();
 		InitPipelineState();
@@ -335,4 +337,41 @@ void SpriteObject::DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandLis
 	prefCommandList->IASetIndexBuffer(&m_IndexBufferView);
 	prefCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
+}
+
+void SpriteObject::CleanUp()
+{
+	if (m_pTexHandle)
+	{
+		m_pRenderer->DeleteTexture(static_pointer_cast<void>(m_pTexHandle));
+	}
+
+	CleanUpSharedResources();
+}
+
+void SpriteObject::CleanUpSharedResources()
+{
+	if (!m_dwInitRefCount)
+		return;
+
+	DWORD ref_count = --m_dwInitRefCount;
+	if (!ref_count)
+	{
+		if (m_pRootSignature)
+		{
+			m_pRootSignature.Reset();
+		}
+		if (m_pPipelineState)
+		{
+			m_pPipelineState.Reset();
+		}
+		if (m_pVertexBuffer)
+		{
+			m_pVertexBuffer.Reset();
+		}
+		if (m_pIndexBuffer)
+		{
+			m_pIndexBuffer.Reset();
+		}
+	}
 }

@@ -539,12 +539,19 @@ BOOL D3D12Renderer::CreateDepthStencil(UINT width, UINT height)
 void D3D12Renderer::InitCamera()
 {
 	// 카메라 파라미터 EYE, AT, UP
-	XMVECTOR eyePos = XMVectorSet(0.f, 0.f, -1.f, 1.f);	// 카메라 위치
-	XMVECTOR eyeDir = XMVectorSet(0.f, 0.f, 1.f, 0.f);	// 카메라 방향(정면)
-	XMVECTOR upDir = XMVectorSet(0.f, 1.f, 0.f, 0.f);	// 카메라 위쪽 방향
+	m_CamPos = XMVectorSet(0.f, 0.f, -1.f, 1.f);
+	m_CamDir = XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
 
+	SetCamera(m_CamPos, m_CamDir, Up);
+
+
+}
+
+void D3D12Renderer::SetCamera(const XMVECTOR& refCamPos, const XMVECTOR& refCamDir, const XMVECTOR& refCamUp)
+{
 	// View
-	m_matView = XMMatrixLookAtLH(eyePos, eyeDir, upDir);
+	m_matView = XMMatrixLookAtLH(refCamPos, refCamDir, refCamUp);
 
 	// 시야각 fovY (라디안)
 	float fovY = XM_PIDIV4;	// 90도(위아래 45도)
@@ -555,7 +562,33 @@ void D3D12Renderer::InitCamera()
 	float fFar = 1000.f;
 
 	m_matProj = XMMatrixPerspectiveFovLH(fovY, fAspectRatio, fNear, fFar);
+}
 
+void D3D12Renderer::GetCameraPos(float& reffOutX, float& reffOutY, float& reffOutZ)
+{
+	m_CamPos.m128_f32[0] = x;
+	m_CamPos.m128_f32[1] = y;
+	m_CamPos.m128_f32[2] = z;
+}
+
+void D3D12Renderer::MoveCamera(float x, float y, float z)
+{
+	m_CamPos.m128_f32[0] += x;
+	m_CamPos.m128_f32[1] += y;
+	m_CamPos.m128_f32[2] += z;
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	SetCamera(m_CamPos, m_CamDir, Up);
+}
+
+void D3D12Renderer::SetCameraPos(float x, float y, float z)
+{
+	m_CamPos.m128_f32[0] = x;
+	m_CamPos.m128_f32[1] = y;
+	m_CamPos.m128_f32[2] = z;
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	SetCamera(m_CamPos, m_CamDir, Up);
 }
 
 UINT64 D3D12Renderer::Fence()
@@ -586,6 +619,11 @@ shared_ptr<void> D3D12Renderer::CreateBasicMeshObject()
 
 void D3D12Renderer::DeleteBasicMeshObject(shared_ptr<void>& pMeshObjHandle)
 {
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
 	shared_ptr<BasicMeshObject> pMeshObj = static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	pMeshObj.reset();
 }

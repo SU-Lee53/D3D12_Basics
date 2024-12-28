@@ -8,6 +8,8 @@
 #include "DescriptorPool.h"
 #include "SimpleConstantBufferPool.h"
 
+using namespace std;
+
 ComPtr<ID3D12RootSignature>	BasicMeshObject::m_pRootSignature = nullptr;
 ComPtr<ID3D12PipelineState>	BasicMeshObject::m_pPipelineState = nullptr;
 DWORD						BasicMeshObject::m_dwInitRefCount = 0;
@@ -18,7 +20,7 @@ BasicMeshObject::BasicMeshObject()
 
 BasicMeshObject::~BasicMeshObject()
 {
-	m_dwInitRefCount--;
+	CleanUp();
 }
 
 BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
@@ -348,4 +350,52 @@ BOOL BasicMeshObject::InitPipelineState()
 	}
 
 	return TRUE;
+}
+
+void BasicMeshObject::CleanUp()
+{
+	if (!m_TriGroupList.empty())
+	{
+		for (DWORD i = 0; i < m_dwTriGroupCount; i++)
+		{
+			if (m_TriGroupList[i].pIndexBuffer)
+			{
+				m_TriGroupList[i].pIndexBuffer.Reset();
+				m_TriGroupList[i].pIndexBuffer = nullptr;
+			}
+			if (m_TriGroupList[i].pTexHandle)
+			{
+				m_pRenderer->DeleteTexture(static_pointer_cast<void>(m_TriGroupList[i].pTexHandle));
+				m_TriGroupList[i].pTexHandle = nullptr;
+			}
+		}
+	}
+
+	if (m_pVertexBuffer)
+	{
+		m_pVertexBuffer.Reset();
+		m_pVertexBuffer = nullptr;
+	}
+	CleanUpSharedResources();
+}
+
+void BasicMeshObject::CleanUpSharedResources()
+{
+	if (!m_dwInitRefCount)
+		return;
+
+	DWORD ref_count = --m_dwInitRefCount;
+	if (!ref_count)
+	{
+		if (m_pRootSignature)
+		{
+			m_pRootSignature.Reset();
+			m_pRootSignature = nullptr;
+		}
+		if (m_pPipelineState)
+		{
+			m_pPipelineState.Reset();
+			m_pPipelineState = nullptr;
+		}
+	}
 }

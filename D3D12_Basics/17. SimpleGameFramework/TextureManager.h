@@ -25,17 +25,13 @@ public:
 
 private:
 	std::shared_ptr<TEXTURE_HANDLE> AllocTextureHandle();
-	DWORD FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE> pTexHandle);
+	DWORD FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE>& pTexHandle);
 	void CleanUp();
 
 
 private:
-	std::shared_ptr<D3D12Renderer> m_pRenderer = nullptr;
+	std::weak_ptr<D3D12Renderer> m_pRenderer;
 	std::shared_ptr<D3D12ResourceManager> m_pResourceManager = nullptr;
-	//std::unique_ptr<HashTable> m_pHashTable = nullptr;
-	
-	//SORT_LINK* m_pTexLinkHead = nullptr;
-	//SORT_LINK* m_pTexLinkTail = nullptr;
 
 	std::unordered_map<std::wstring, std::shared_ptr<TEXTURE_HANDLE>> m_TextureMap;
 	std::list<std::shared_ptr<TEXTURE_HANDLE>> m_TextureList;

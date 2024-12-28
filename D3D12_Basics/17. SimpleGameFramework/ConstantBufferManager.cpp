@@ -14,6 +14,13 @@ ConstantBufferManager::ConstantBufferManager()
 
 ConstantBufferManager::~ConstantBufferManager()
 {
+	for (DWORD i = 0; i < CONSTANT_BUFFER_TYPE_COUNT; i++)
+	{
+		if (m_pConstantBufferPoolList[i])
+		{
+			m_pConstantBufferPoolList[i].reset();
+		}
+	}
 }
 
 BOOL ConstantBufferManager::Initialize(ComPtr<ID3D12Device5>& pD3DDevice, DWORD dwMaxCBVNum)

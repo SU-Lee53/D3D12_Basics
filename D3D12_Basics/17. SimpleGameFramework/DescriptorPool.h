@@ -15,6 +15,9 @@ public:
 	ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() { return m_pDescriptorHeap; }
 
 private:
+	void CleanUp();
+
+private:
 	ComPtr<ID3D12Device5> m_pD3DDevice = nullptr;
 
 	UINT m_AllocatedDescriptorCount = 0;

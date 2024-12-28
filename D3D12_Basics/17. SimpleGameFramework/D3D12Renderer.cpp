@@ -10,6 +10,7 @@
 #include "SpriteObject.h"
 #include "FontManager.h"
 #include "TextureManager.h"
+#include <dxgidebug.h>
 
 using namespace std;
 
@@ -19,16 +20,7 @@ D3D12Renderer::D3D12Renderer()
 
 D3D12Renderer::~D3D12Renderer()
 {
-	// 현재 진행중인 그래픽 커맨드들이 모두 끝날때까지 잠깐 대기
-	Fence();
-
-	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
-	{
-		WaitForFenceValue(m_ui64LastFenceValues[i]);
-	}
-
-	// ComPtr을 사용하므로 별도의 CleanUp 은 필요없을것으로 생각됨
-	m_pFontManager.reset();
+	CleanUp();
 }
 
 BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
@@ -60,6 +52,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 			{
 				pDebugController5->SetEnableGPUBasedValidation(TRUE);
 				pDebugController5->SetEnableAutoName(TRUE);
+				pDebugController5.Reset();
 			}
 		}
 	}
@@ -71,7 +64,7 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 
 	CreateDXGIFactory2(dwCreateFactoryFlags, IID_PPV_ARGS(pFactory.GetAddressOf()));
 
-	array<D3D_FEATURE_LEVEL, 5> featureLevels =
+	D3D_FEATURE_LEVEL featureLevels[] =
 	{
 		D3D_FEATURE_LEVEL_12_2,
 		D3D_FEATURE_LEVEL_12_1,
@@ -81,10 +74,12 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 	};
 
 
+	/*
 	size_t bestMemory = 0;
 	for (UINT adapterIndex = 0;; ++adapterIndex)
 	{
 		ComPtr<IDXGIAdapter1> pCurAdapter;
+
 		HRESULT hr = pFactory->EnumAdapters1(adapterIndex, pCurAdapter.GetAddressOf());
 
 		if (hr == DXGI_ERROR_NOT_FOUND)
@@ -119,9 +114,32 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 			}
 		}
 	}
+	*/
+
+	DWORD featureLevelsCount = _countof(featureLevels);
+
+	for (DWORD featerLevelIndex = 0; featerLevelIndex < featureLevelsCount; featerLevelIndex++)
+	{
+		UINT adapterIndex = 0;
+		while (DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &pAdapter))
+		{
+			pAdapter->GetDesc1(&adapterDesc);
+
+			if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), featureLevels[featerLevelIndex], IID_PPV_ARGS(m_pD3DDevice.GetAddressOf()))))
+			{
+				break;
+			}
+			pAdapter.Reset();
+			adapterIndex++;
+		}
+
+		if (m_pD3DDevice.Get())
+			break;
+	}
+
 
 	// check if m_pD3DDevice is created
-	if (!m_pD3DDevice)
+	if (!m_pD3DDevice.Get())
 	{
 		__debugbreak();
 		return bResult;
@@ -194,7 +212,6 @@ BOOL D3D12Renderer::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGB
 			__debugbreak();
 			return bResult;
 		}
-		
 		m_uiRenderTargetIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 	}
 
@@ -539,12 +556,19 @@ BOOL D3D12Renderer::CreateDepthStencil(UINT width, UINT height)
 void D3D12Renderer::InitCamera()
 {
 	// 카메라 파라미터 EYE, AT, UP
-	XMVECTOR eyePos = XMVectorSet(0.f, 0.f, -1.f, 1.f);	// 카메라 위치
-	XMVECTOR eyeDir = XMVectorSet(0.f, 0.f, 1.f, 0.f);	// 카메라 방향(정면)
-	XMVECTOR upDir = XMVectorSet(0.f, 1.f, 0.f, 0.f);	// 카메라 위쪽 방향
+	m_CamPos = XMVectorSet(0.f, 0.f, -1.f, 1.f);
+	m_CamDir = XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
 
+	SetCamera(m_CamPos, m_CamDir, Up);
+
+
+}
+
+void D3D12Renderer::SetCamera(const XMVECTOR& refCamPos, const XMVECTOR& refCamDir, const XMVECTOR& refCamUp)
+{
 	// View
-	m_matView = XMMatrixLookAtLH(eyePos, eyeDir, upDir);
+	m_matView = XMMatrixLookAtLH(refCamPos, refCamDir, refCamUp);
 
 	// 시야각 fovY (라디안)
 	float fovY = XM_PIDIV4;	// 90도(위아래 45도)
@@ -555,7 +579,33 @@ void D3D12Renderer::InitCamera()
 	float fFar = 1000.f;
 
 	m_matProj = XMMatrixPerspectiveFovLH(fovY, fAspectRatio, fNear, fFar);
+}
 
+void D3D12Renderer::GetCameraPos(float& reffOutX, float& reffOutY, float& reffOutZ)
+{
+	reffOutX = m_CamPos.m128_f32[0];
+	reffOutY = m_CamPos.m128_f32[1];
+	reffOutZ = m_CamPos.m128_f32[2];
+}
+
+void D3D12Renderer::MoveCamera(float x, float y, float z)
+{
+	m_CamPos.m128_f32[0] += x;
+	m_CamPos.m128_f32[1] += y;
+	m_CamPos.m128_f32[2] += z;
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	SetCamera(m_CamPos, m_CamDir, Up);
+}
+
+void D3D12Renderer::SetCameraPos(float x, float y, float z)
+{
+	m_CamPos.m128_f32[0] = x;
+	m_CamPos.m128_f32[1] = y;
+	m_CamPos.m128_f32[2] = z;
+	XMVECTOR Up = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	SetCamera(m_CamPos, m_CamDir, Up);
 }
 
 UINT64 D3D12Renderer::Fence()
@@ -586,6 +636,11 @@ shared_ptr<void> D3D12Renderer::CreateBasicMeshObject()
 
 void D3D12Renderer::DeleteBasicMeshObject(shared_ptr<void>& pMeshObjHandle)
 {
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+
 	shared_ptr<BasicMeshObject> pMeshObj = static_pointer_cast<BasicMeshObject>(pMeshObjHandle);
 	pMeshObj.reset();
 }
@@ -808,7 +863,7 @@ void D3D12Renderer::DeleteFontObject(shared_ptr<void>& pFontHandle)
 	m_pFontManager->DeleteFontObject(static_pointer_cast<FONT_HANDLE>(pFontHandle));
 }
 
-BOOL D3D12Renderer::WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int& refiOutHeight, shared_ptr<void>& pFontObjHandle, const wstring& wchString, DWORD dwLen)
+BOOL D3D12Renderer::WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int& refiOutHeight, shared_ptr<void>& pFontObjHandle, const WCHAR* wchString, DWORD dwLen)
 {
 	BOOL bResult = m_pFontManager->WriteTextToBitmap(
 		pDestImage, 
@@ -828,4 +883,130 @@ BOOL D3D12Renderer::WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT Des
 shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
 {
 	return m_pConstantBufferManagers[m_dwCurContextIndex]->GetConstantBufferPool(type);
+}
+
+void D3D12Renderer::CleanUp()
+{
+
+	Fence();
+
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		WaitForFenceValue(m_ui64LastFenceValues[i]);
+	}
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		if (m_pConstantBufferManagers[i])
+		{
+			m_pConstantBufferManagers[i].reset();
+		}
+		if (m_pDescriptorPools[i])
+		{
+			m_pDescriptorPools[i].reset();
+		}
+	}
+	if (m_pTextureManager)
+	{
+		m_pTextureManager.reset();
+	}
+	if (m_pResourceManager)
+	{
+		m_pResourceManager.reset();
+	}
+	if (m_pFontManager)
+	{
+		m_pFontManager.reset();
+	}
+	if (m_pSingleDescriptorAllocator)
+	{
+		m_pSingleDescriptorAllocator.reset();
+	}
+
+	CleanupDescriptorHeapForRTV();
+	CleanupDescriptorHeapForDSV();
+
+	for (DWORD i = 0; i < SWAP_CHAIN_FRAME_COUNT; i++)
+	{
+		if (m_pRenderTargets[i])
+		{
+			m_pRenderTargets[i].Reset();
+		}
+	}
+	if (m_pDepthStencil)
+	{
+		m_pDepthStencil.Reset();
+	}
+	if (m_pSwapChain)
+	{
+		m_pSwapChain.Reset();
+	}
+
+	if (m_pCommandQueue)
+	{
+		m_pCommandQueue.Reset();
+	}
+
+	CleanupCommandList();
+
+	CleanupFence();
+
+	if (m_pD3DDevice)
+	{
+		ULONG ref_count = m_pD3DDevice.Reset();
+		if (ref_count)
+		{
+			//resource leak!!!
+			IDXGIDebug1* pDebug = nullptr;
+			if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
+			{
+				pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+				pDebug->Release();
+			}
+			__debugbreak();
+		}
+
+		m_pD3DDevice = nullptr;
+
+	}
+}
+void D3D12Renderer::CleanupFence()
+{
+	if (m_hFenceEvent)
+	{
+		CloseHandle(m_hFenceEvent);
+		m_hFenceEvent = nullptr;
+	}
+	if (m_pFence)
+	{
+		m_pFence.Reset();
+	}
+}
+void D3D12Renderer::CleanupCommandList()
+{
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		if (m_pCommandAllocators[i])
+		{
+			m_pCommandAllocators[i].Reset();
+		}
+		if (m_pCommandLists[i])
+		{
+			m_pCommandLists[i].Reset();
+		}
+	}
+}
+void D3D12Renderer::CleanupDescriptorHeapForRTV()
+{
+	if (m_pRTVHeap)
+	{
+		m_pRTVHeap.Reset();
+	}
+}
+void D3D12Renderer::CleanupDescriptorHeapForDSV()
+{
+	if (m_pDSVHeap)
+	{
+		m_pDSVHeap.Reset();
+	}
+
 }

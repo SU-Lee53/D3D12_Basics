@@ -26,7 +26,7 @@ private:
 	void CleanUpD2D();
 
 private:
-	std::shared_ptr<D3D12Renderer>	m_pRenderer = nullptr;
+	std::weak_ptr<D3D12Renderer>	m_pRenderer;
 
 	ComPtr<ID2D1Device2>			m_pD2DDevice = nullptr;
 	ComPtr<ID2D1DeviceContext2>		m_pD2DDeviceContext = nullptr;

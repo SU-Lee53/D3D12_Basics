@@ -39,7 +39,13 @@ private:
 	BOOL CreateFence();
 	BOOL CreateDepthStencil(UINT width, UINT height);
 
+public:
+	// Camera Functions
 	void InitCamera();
+	void SetCamera(const XMVECTOR& refCamPos, const XMVECTOR& refCamDir, const XMVECTOR& refCamUp);
+	void GetCameraPos(float& reffOutX, float& reffOutY, float& reffOutZ);
+	void MoveCamera(float x, float y, float z);
+	void SetCameraPos(float x, float y, float z);
 
 private:
 	UINT64 Fence();
@@ -134,18 +140,23 @@ private:
 	std::array<ComPtr<ID3D12Resource>, SWAP_CHAIN_FRAME_COUNT> m_pRenderTargets;
 	ComPtr<ID3D12Resource>			m_pDepthStencil = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pRTVHeap = nullptr;
-	ComPtr<ID3D12DescriptorHeap>	m_pDSVHeap = nullptr;	// 아직 미사용
+	ComPtr<ID3D12DescriptorHeap>	m_pDSVHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pSRVHeap = nullptr;
 	ComPtr<ID3D12Fence>				m_pFence = nullptr;
 	HANDLE							m_hFenceEvent = nullptr;
 	UINT							m_uiRTVDescriptorSize = 0;
 	UINT							m_uiSRVDescriptorSize = 0;
-	UINT							m_uiDSVDescriptorSize = 0;	// 아직 미사용
+	UINT							m_uiDSVDescriptorSize = 0;
 	UINT							m_uiRenderTargetIndex = 0;
 	DWORD							m_dwCurContextIndex = 0;
 
+	// Camera Variables
 	XMMATRIX m_matView = {};
 	XMMATRIX m_matProj = {};
+
+	XMVECTOR m_CamPos = {};
+	XMVECTOR m_CamDir = {};
+
 
 	std::shared_ptr<D3D12ResourceManager>		m_pResourceManager = nullptr;
 	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;

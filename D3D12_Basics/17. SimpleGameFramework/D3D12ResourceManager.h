@@ -25,6 +25,12 @@ public:
 	void WaitForFenceValue();
 
 private:
+	void CleanUp();
+	void CleanupFence();
+	void CleanupCommandList();
+
+
+private:
 	ComPtr<ID3D12Device5>					m_pD3DDevice = nullptr;
 	ComPtr<ID3D12CommandQueue>				m_pCommandQueue = nullptr;
 	ComPtr<ID3D12CommandAllocator>			m_pCommandAllocator = nullptr;

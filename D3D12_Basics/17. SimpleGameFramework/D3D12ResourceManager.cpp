@@ -10,6 +10,7 @@ D3D12ResourceManager::D3D12ResourceManager()
 
 D3D12ResourceManager::~D3D12ResourceManager()
 {
+	CleanUp();
 }
 
 BOOL D3D12ResourceManager::Initialize(ComPtr<ID3D12Device5>& pD3DDevice)
@@ -533,5 +534,45 @@ void D3D12ResourceManager::WaitForFenceValue()
 	{
 		m_pFence->SetEventOnCompletion(ExpectedFenceValue, m_hFenceEvent);
 		WaitForSingleObject(m_hFenceEvent, INFINITE);
+	}
+}
+
+void D3D12ResourceManager::CleanUp()
+{
+	WaitForFenceValue();
+
+	if (m_pCommandQueue)
+	{
+		m_pCommandQueue.Reset();
+	}
+
+	CleanupCommandList();
+
+	CleanupFence();
+}
+
+void D3D12ResourceManager::CleanupFence()
+{
+	if (m_hFenceEvent)
+	{
+		CloseHandle(m_hFenceEvent);
+		m_hFenceEvent = nullptr;
+	}
+	if (m_pFence)
+	{
+		m_pFence.Reset();
+		m_pFence = nullptr;
+	}
+}
+
+void D3D12ResourceManager::CleanupCommandList()
+{
+	if (m_pCommandList)
+	{
+		m_pCommandList.Reset();
+	}
+	if (m_pCommandAllocator)
+	{
+		m_pCommandAllocator.Reset();
 	}
 }

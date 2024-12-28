@@ -12,7 +12,7 @@ public:
 	BOOL Initialize(std::shared_ptr<D3D12Renderer> pRenderer, ComPtr<ID3D12CommandQueue> pCommandQueue, UINT width, UINT height, BOOL bEnableDebugLayer);
 	std::shared_ptr<FONT_HANDLE> CreateFontObject(const std::wstring& wchFontFamilyName, float fFontSize);
 	void DeleteFontObject(std::shared_ptr<FONT_HANDLE>& pFontHandle);
-	BOOL WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int refiOutHeight, std::shared_ptr<FONT_HANDLE> pFontHandle, const std::wstring& wchString, DWORD dwLen);
+	BOOL WriteTextToBitmap(BYTE* pDescImage, UINT DestWidth, UINT DestHeight, UINT DestPitch, int& refiOutWidth, int refiOutHeight, std::shared_ptr<FONT_HANDLE> pFontHandle, const WCHAR* wchString, DWORD dwLen);
 
 
 private:
@@ -26,7 +26,7 @@ private:
 	void CleanUpD2D();
 
 private:
-	std::shared_ptr<D3D12Renderer>	m_pRenderer = nullptr;
+	std::weak_ptr<D3D12Renderer>	m_pRenderer;
 
 	ComPtr<ID2D1Device2>			m_pD2DDevice = nullptr;
 	ComPtr<ID2D1DeviceContext2>		m_pD2DDeviceContext = nullptr;

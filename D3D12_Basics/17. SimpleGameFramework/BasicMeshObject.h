@@ -47,6 +47,10 @@ private:
 	BOOL InitPipelineState();
 
 private:
+	void CleanUp();
+	void CleanUpSharedResources();
+
+private:
 	// 모든 BasicMeshObject 아래 3가지를 객체들이 공유함
 	static ComPtr<ID3D12RootSignature>	m_pRootSignature;
 	static ComPtr<ID3D12PipelineState>	m_pPipelineState;

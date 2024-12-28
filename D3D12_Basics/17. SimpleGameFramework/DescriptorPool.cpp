@@ -7,6 +7,7 @@ DescriptorPool::DescriptorPool()
 
 DescriptorPool::~DescriptorPool()
 {
+	CleanUp();
 }
 
 BOOL DescriptorPool::Initialize(ComPtr<ID3D12Device5>& pD3DDevice, UINT MaxDescriptorCount)
@@ -62,4 +63,12 @@ void DescriptorPool::Reset()
 	// 현재 렌더러는 다음프레임을 그릴때 이전 프레임이 그려질때까지 기다림
 	// 그래서, 이전 프레임에 사용된 Descriptor 들은 쓸모없으므로 그냥 Count 를 0으로 내리고 처음부터 Descriptor 를 가져가도 무방함
 	m_AllocatedDescriptorCount = 0;
+}
+
+void DescriptorPool::CleanUp()
+{
+	if (m_pDescriptorHeap)
+	{
+		m_pDescriptorHeap.Reset();
+	}
 }

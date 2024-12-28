@@ -28,8 +28,8 @@ BOOL TextureManager::Initialize(std::shared_ptr<D3D12Renderer>& pRenderer, DWORD
 
 std::shared_ptr<TEXTURE_HANDLE> TextureManager::CreateTextureFromFile(const std::wstring& wchFilename)
 {
-	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer->GetDevice();
-	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer->GetSingleDescriptorAllocator();
+	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer.lock()->GetDevice();
+	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer.lock()->GetSingleDescriptorAllocator();
 
 	ComPtr<ID3D12Resource> pTexResource = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
@@ -83,8 +83,8 @@ std::shared_ptr<TEXTURE_HANDLE> TextureManager::CreateTextureFromFile(const std:
 
 std::shared_ptr<TEXTURE_HANDLE> TextureManager::CreateDynamicTexture(UINT TexWidth, UINT TexHeight)
 {
-	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer->GetDevice();
-	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer->GetSingleDescriptorAllocator();
+	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer.lock()->GetDevice();
+	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer.lock()->GetSingleDescriptorAllocator();
 	shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
 
 	ComPtr<ID3D12Resource> pTexResource = nullptr;
@@ -124,8 +124,8 @@ std::shared_ptr<TEXTURE_HANDLE> TextureManager::CreateDynamicTexture(UINT TexWid
 
 std::shared_ptr<TEXTURE_HANDLE> TextureManager::CreateImmutableTexture(UINT TexWidth, UINT TexHeight, DXGI_FORMAT format, const BYTE* pInitImage)
 {
-	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer->GetDevice();
-	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer->GetSingleDescriptorAllocator();
+	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer.lock()->GetDevice();
+	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer.lock()->GetSingleDescriptorAllocator();
 	shared_ptr<TEXTURE_HANDLE> pTexHandle = nullptr;
 
 	ComPtr<ID3D12Resource> pTexResource = nullptr;
@@ -170,10 +170,10 @@ std::shared_ptr<TEXTURE_HANDLE> TextureManager::AllocTextureHandle()
 	return pTexHandle;
 }
 
-DWORD TextureManager::FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE> pTexHandle)
+DWORD TextureManager::FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE>& pTexHandle)
 {
-	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer->GetDevice();
-	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer->GetSingleDescriptorAllocator();
+	ComPtr<ID3D12Device5> pD3DDevice = m_pRenderer.lock()->GetDevice();
+	shared_ptr<SingleDescriptorAllocator> pSingleDescriptorAllocator = m_pRenderer.lock()->GetSingleDescriptorAllocator();
 
 	// dwRefCount == 0 은 불가능
 	if (!pTexHandle->dwRefCount)
@@ -184,12 +184,12 @@ DWORD TextureManager::FreeTextureHandle(std::shared_ptr<TEXTURE_HANDLE> pTexHand
 	{
 		if (pTexHandle->pTexResource)
 		{
-			pTexHandle->pTexResource->Release();
+			pTexHandle->pTexResource.Reset();
 			pTexHandle->pTexResource = nullptr;
 		}
 		if (pTexHandle->pUploadBuffer)
 		{
-			pTexHandle->pUploadBuffer->Release();
+			pTexHandle->pUploadBuffer.Reset();
 			pTexHandle->pUploadBuffer = nullptr;
 		}
 		if (pTexHandle->srv.ptr)

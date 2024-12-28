@@ -93,3 +93,15 @@ void SimpleConstantBufferPool::Reset()
 {
 	m_AllocatedCBVNum = 0;
 }
+
+void SimpleConstantBufferPool::CleanUp()
+{
+	if (m_pResource)
+	{
+		m_pResource.Reset();
+	}
+	if (m_pCBVHeap)
+	{
+		m_pCBVHeap.Reset();
+	}
+}

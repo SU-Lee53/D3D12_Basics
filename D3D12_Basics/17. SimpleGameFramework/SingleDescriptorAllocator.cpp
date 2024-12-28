@@ -7,6 +7,7 @@ SingleDescriptorAllocator::SingleDescriptorAllocator()
 
 SingleDescriptorAllocator::~SingleDescriptorAllocator()
 {
+	CleanUp();
 }
 
 BOOL SingleDescriptorAllocator::Initialize(ComPtr<ID3D12Device5>& pDevice, DWORD dwMaxCount, D3D12_DESCRIPTOR_HEAP_FLAGS Flags)
@@ -89,4 +90,19 @@ D3D12_GPU_DESCRIPTOR_HANDLE SingleDescriptorAllocator::GetGPUHandleFromCPUHandle
 
 	return gpuHandle;
 
+}
+
+void SingleDescriptorAllocator::CleanUp()
+{
+#ifdef _DEBUG
+		m_IndexCreator.Check();
+#endif
+	if (m_pHeap)
+	{
+		m_pHeap.Reset();
+	}
+	if (m_pD3DDevice)
+	{
+		m_pD3DDevice.Reset();
+	}
 }

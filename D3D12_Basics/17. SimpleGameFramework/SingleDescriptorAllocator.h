@@ -16,6 +16,9 @@ public:
 	ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() { return m_pHeap; }
 
 private:
+	void	CleanUp();
+
+private:
 	ComPtr<ID3D12Device5>			m_pD3DDevice = nullptr;
 	ComPtr<ID3D12DescriptorHeap>	m_pHeap = nullptr;
 	IndexCreator					m_IndexCreator;

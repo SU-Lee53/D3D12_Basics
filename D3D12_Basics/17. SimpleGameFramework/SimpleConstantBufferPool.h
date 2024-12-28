@@ -19,6 +19,10 @@ public:
 	CB_CONTAINER* Alloc();
 	void Reset();
 
+
+private:
+	void CleanUp();
+
 private:
 	std::vector<CB_CONTAINER> m_pCBContainerList = {};
 

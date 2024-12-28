@@ -58,6 +58,9 @@
     <Filter Include="Renderer\BasicMeshObject">
       <UniqueIdentifier>{e903f3c8-964d-43bf-a3ee-1eb4d756f56c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{a24e33ae-7c84-476b-802a-e7daeb2dad63}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DUtil.h">
@@ -120,6 +123,12 @@
     <ClInclude Include="..\DirectXTex\DirectXTex.h">
       <Filter>DirectXTex</Filter>
     </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="17. SimpleGameFramework.ico">
@@ -178,6 +187,12 @@
     <ClCompile Include="VertexUtil.cpp">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="17. SimpleGameFramework.rc">
@@ -194,5 +209,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="17. Simple Game Framework.md" />
   </ItemGroup>
 </Project>
