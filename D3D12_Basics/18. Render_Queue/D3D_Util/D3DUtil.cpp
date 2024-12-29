@@ -22,6 +22,7 @@ void D3DUtils::SetDebugLayerInfo(ComPtr<ID3D12Device> pD3DDevice)
 		filter.DenyList.NumIDs = hide.size();
 		filter.DenyList.pIDList = hide.data();
 		pInfoQueue->AddStorageFilterEntries(&filter);
+		pInfoQueue.Reset();
 	}
 }
 
@@ -41,4 +42,41 @@ void D3DUtils::SetDefaultSamplerDesc(D3D12_STATIC_SAMPLER_DESC* pOutSamplerDesc,
 	pOutSamplerDesc->ShaderRegister = RegisterIndex;
 	pOutSamplerDesc->RegisterSpace = 0;
 	pOutSamplerDesc->ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+}
+
+void D3DUtils::UpdateTexture(ComPtr<ID3D12Device5>& pD3DDevice, ComPtr<ID3D12GraphicsCommandList>& pCommandList, ComPtr<ID3D12Resource>& pDestTexResource, ComPtr<ID3D12Resource>& pSrcTexResource)
+{
+	const DWORD MAX_SUB_RESOURCE_NUM = 32;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT FootPrint[MAX_SUB_RESOURCE_NUM] = {};
+	UINT Rows[MAX_SUB_RESOURCE_NUM] = {};
+	UINT64 RowSize[MAX_SUB_RESOURCE_NUM] = {};
+	UINT64 TotalBytes = 0;
+
+	D3D12_RESOURCE_DESC Desc = pDestTexResource->GetDesc();
+	if (Desc.MipLevels > (UINT)_countof(FootPrint))
+	{
+		__debugbreak();
+		return;
+	}
+
+	pD3DDevice->GetCopyableFootprints(&Desc, 0, Desc.MipLevels, 0, FootPrint, Rows, RowSize, &TotalBytes);
+
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDestTexResource.Get(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+	for (DWORD i = 0; i < Desc.MipLevels; i++)
+	{
+		D3D12_TEXTURE_COPY_LOCATION destLocation = {};
+		destLocation.PlacedFootprint = FootPrint[i];
+		destLocation.pResource = pDestTexResource.Get();
+		destLocation.SubresourceIndex = i;
+		destLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		
+		D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+		srcLocation.PlacedFootprint = FootPrint[i];
+		srcLocation.pResource = pSrcTexResource.Get();
+		srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+		pCommandList->CopyTextureRegion(&destLocation, 0, 0, 0, &srcLocation, nullptr);
+	}
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDestTexResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE));
+
 }

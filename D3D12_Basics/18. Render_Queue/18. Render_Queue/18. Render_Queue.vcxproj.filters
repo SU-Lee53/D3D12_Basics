@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DirectXTex">
+      <UniqueIdentifier>{88a01148-a3c5-404b-b38e-26b72fda3f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{b5c461d7-0027-49c2-91cb-09b17b26ca8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{a0134009-92a1-4369-8de3-c33d501d5516}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main Entry">
+      <UniqueIdentifier>{ce1e99d1-9e19-4e10-8dc0-861927aa1db0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pch">
+      <UniqueIdentifier>{e62ffb5f-e068-4b4e-bb8f-b46c1baa9c9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{c54f3e25-594d-46f2-922d-6353027107e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{31bbec49-6a88-4ecc-935f-9ec9d05d6f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="typdef">
+      <UniqueIdentifier>{f9d7695b-6c55-48e0-a831-44fa114c44ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{645cf4b5-f767-4da7-ba48-473ae2a12c31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\BasicMeshObject">
+      <UniqueIdentifier>{636180b3-10b7-4f57-80bd-634a2b974ce6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\ConstantBufferManager">
+      <UniqueIdentifier>{a3ee6570-afdc-465e-a4ee-0b72cb31ad88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\ConstantBufferPool">
+      <UniqueIdentifier>{bbc194a4-0865-4efb-b25f-9fd9cdcf6b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\D3D12Renderer">
+      <UniqueIdentifier>{8ca6e46f-c5a6-43a9-bbcf-1f5cad95b733}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\DescriptorPool">
+      <UniqueIdentifier>{f09497a2-6d08-4df1-9221-4ba1436d7781}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\FontManager">
+      <UniqueIdentifier>{73bf91cd-6f46-4a86-a43e-74628d97e05a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\RenderQueue">
+      <UniqueIdentifier>{646d1e93-6959-4b6c-a173-94ce3a7a0274}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\ResourceManager">
+      <UniqueIdentifier>{b1af7db6-e101-4f57-92d9-a2179ccb85b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shader">
+      <UniqueIdentifier>{242f9c5c-ee8d-423e-959f-4712300c4856}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\SingleDescriptorAllocator">
+      <UniqueIdentifier>{d0ca2d5f-59e0-4a31-a82c-8bb420db0a74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\SpriteObject">
+      <UniqueIdentifier>{98d84a2c-72f7-4136-b1d4-0888f5a64f0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\TextureManager">
+      <UniqueIdentifier>{154e65ce-a66a-432d-a36e-67afb58ef72c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\D3D_Util\D3DUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\D3D_Util\IndexCreator.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\D3D_Util\LinkedList.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\D3D_Util\VertexUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicMeshObject.h">
+      <Filter>Renderer\BasicMeshObject</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBufferManager.h">
+      <Filter>Renderer\ConstantBufferManager</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Renderer.h">
+      <Filter>Renderer\D3D12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12ResourceManager.h">
+      <Filter>Renderer\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader12.h">
+      <Filter>DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorPool.h">
+      <Filter>Renderer\DescriptorPool</Filter>
+    </ClInclude>
+    <ClInclude Include="FontManager.h">
+      <Filter>Renderer\FontManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleConstantBufferPool.h">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClInclude>
+    <ClInclude Include="SingleDescriptorAllocator.h">
+      <Filter>Renderer\SingleDescriptorAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="SpriteObject.h">
+      <Filter>Renderer\SpriteObject</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>Renderer\TextureManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedef.h">
+      <Filter>typdef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectXTex\DirectXTex.h">
+      <Filter>DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderQueue.h">
+      <Filter>Renderer\RenderQueue</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\D3D_Util\D3DUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\D3D_Util\IndexCreator.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\D3D_Util\LinkedList.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\D3D_Util\VertexUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicMeshObject.cpp">
+      <Filter>Renderer\BasicMeshObject</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBufferManager.cpp">
+      <Filter>Renderer\ConstantBufferManager</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Renderer.cpp">
+      <Filter>Renderer\D3D12Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12ResourceManager.cpp">
+      <Filter>Renderer\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <Filter>DirectXTex</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorPool.cpp">
+      <Filter>Renderer\DescriptorPool</Filter>
+    </ClCompile>
+    <ClCompile Include="FontManager.cpp">
+      <Filter>Renderer\FontManager</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Main Entry</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>pch</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleConstantBufferPool.cpp">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleDescriptorAllocator.cpp">
+      <Filter>Renderer\SingleDescriptorAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteObject.cpp">
+      <Filter>Renderer\SpriteObject</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
+      <Filter>Renderer\TextureManager</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderQueue.cpp">
+      <Filter>Renderer\RenderQueue</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="18. Render_Queue.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="18. Render_Queue.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\shBasicMesh.hlsl">
+      <Filter>Renderer\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shSprite.hlsl">
+      <Filter>Renderer\Shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="..\18. Render Queue.md" />
+  </ItemGroup>
+</Project>
