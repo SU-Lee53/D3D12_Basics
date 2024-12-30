@@ -340,7 +340,7 @@ void D3D12Renderer::EndRender()
 	// USE_MULTIPLE_COMMAND_LIST 매크로가 선언되어있다면 CommandList 에 커맨드를 400개씩 나눠담아 실행하도록 함
 
 #ifdef USE_MULTIPLE_COMMAND_LIST
-	m_pRenderQueue->Process(pCommandListPool, m_pCommandQueue, 40, rtvHandle, dsvHandle, m_ViewPort, m_ScissorRect);
+	m_pRenderQueue->Process(pCommandListPool, m_pCommandQueue, 400, rtvHandle, dsvHandle, m_ViewPort, m_ScissorRect);
 #else
 	m_pRenderQueue->Process(pCommandListPool, m_pCommandQueue, (DWORD)(-1), rtvHandle, dsvHandle, m_ViewPort, m_ScissorRect);
 #endif
@@ -913,6 +913,16 @@ BOOL D3D12Renderer::WriteTextToBitmap(BYTE* pDestImage, UINT DestWidth, UINT Des
 shared_ptr<SimpleConstantBufferPool>& D3D12Renderer::GetConstantBufferPool(CONSTANT_BUFFER_TYPE type)
 {
 	return m_pConstantBufferManagers[m_dwCurContextIndex]->GetConstantBufferPool(type);
+}
+
+DWORD D3D12Renderer::GetCommandListCount()
+{
+	DWORD dwCommandListCount = 0;
+	for (DWORD i = 0; i < MAX_PENDING_FRAME_COUNT; i++)
+	{
+		dwCommandListCount = m_pCommandListPools[i]->GetTotalCmdListNum();
+	}
+	return dwCommandListCount;
 }
 
 void D3D12Renderer::CleanUp()

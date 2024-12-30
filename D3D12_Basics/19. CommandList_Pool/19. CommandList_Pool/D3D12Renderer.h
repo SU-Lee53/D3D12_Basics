@@ -104,6 +104,8 @@ public:
 	DWORD GetScreenHeight() { return m_dwHeight; }
 	DWORD GetDPI() { return m_fDPI; }
 	
+	DWORD GetCommandListCount();
+
 private:
 	void	CleanUp();
 	void	CleanupFence();

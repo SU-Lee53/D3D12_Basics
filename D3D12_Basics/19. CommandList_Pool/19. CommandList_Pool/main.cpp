@@ -110,7 +110,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     g_pGame = std::make_shared<Game>();
 #ifdef _DEBUG
-    g_pGame->Initialize(g_hMainWindow, TRUE, TRUE); // Debug Layer ON / GPU Based Validation ON
+    g_pGame->Initialize(g_hMainWindow, FALSE, FALSE); // Debug Layer ON / GPU Based Validation ON
 #elif _DEBUG
     g_pGame->Initialize(g_hMainWindow, FALSE, FALSE);
 #endif

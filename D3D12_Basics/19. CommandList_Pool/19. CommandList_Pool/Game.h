@@ -52,6 +52,7 @@ private:
 	ULONGLONG m_PrvUpdateTick = 0;
 	DWORD m_FrameCount = 0;
 	DWORD m_FPS = 0;
+	DWORD m_dwCommandListCount = 0;
 	WCHAR m_wchText[64] = {};
 
 	ULONGLONG m_testTextUpdatedCount = 0;

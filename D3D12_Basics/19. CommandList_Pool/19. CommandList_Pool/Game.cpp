@@ -33,7 +33,7 @@ BOOL Game::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
 	m_pSpriteObjCommon = m_pRenderer->CreateSpriteObject();
 
 	const DWORD GAME_OBJ_COUNT = 1000;
-	for (DWORD i = 0; i < GAME_OBJ_COUNT / 10; i++)
+	for (DWORD i = 0; i < GAME_OBJ_COUNT; i++)
 	{
 		shared_ptr<GameObject> pGameObj = CreateGameObject();
 		if (pGameObj)
@@ -69,7 +69,8 @@ void Game::Run()
 
 		WCHAR wchTxt[64];
 		m_FPS = m_FrameCount;
-		swprintf_s(wchTxt, L"FPS:%u", m_FPS);
+		m_dwCommandListCount = m_pRenderer->GetCommandListCount();
+		swprintf_s(wchTxt, L"FPS : %u, CommandList : %u", m_FPS, m_dwCommandListCount);
 		SetWindowText(m_hWnd, wchTxt);
 
 		m_FrameCount = 0;
@@ -102,7 +103,7 @@ BOOL Game::Update(ULONGLONG CurTick)
 	int iTextWidth = 0;
 	int iTextHeight = 0;
 	WCHAR	wchTxt[64] = {};
-	DWORD	dwTxtLen = swprintf_s(wchTxt, L"Current FrameRate: %u", m_FPS);
+	DWORD	dwTxtLen = swprintf_s(wchTxt, L"FrameRate: %u, Commandlist : %u", m_FPS, m_dwCommandListCount);
 
 	if (wcscmp(m_wchText, wchTxt))
 	{
