@@ -28,8 +28,11 @@ private:
 
 public:
 	// Draw
-	void DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle);
-	void Draw(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z);
+	//void DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle);
+	//void Draw(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z);
+	
+	void DrawWithTex(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle);
+	void Draw(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z);
 
 private:
 	void CleanUp();

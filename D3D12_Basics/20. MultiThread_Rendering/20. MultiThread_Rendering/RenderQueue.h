@@ -40,8 +40,9 @@ public:
 
 	BOOL Initialize(std::shared_ptr<D3D12Renderer> pRenderer, DWORD dwMaxItemNum);
 	BOOL Add(const std::shared_ptr<RENDER_ITEM> pItem);
-	DWORD Process(ComPtr<ID3D12GraphicsCommandList>& prefCommandList);
-	DWORD Process(std::shared_ptr<CommandListPool> pCommandListPool, ComPtr<ID3D12CommandQueue> pCommandQueue, DWORD dwProcessCountPerCommandList, D3D12_CPU_DESCRIPTOR_HANDLE rtv, D3D12_CPU_DESCRIPTOR_HANDLE dsv, const D3D12_VIEWPORT& refViewport, const D3D12_RECT& refScissorRect);
+	//DWORD Process(ComPtr<ID3D12GraphicsCommandList>& prefCommandList);
+	//DWORD Process(std::shared_ptr<CommandListPool> pCommandListPool, ComPtr<ID3D12CommandQueue> pCommandQueue, DWORD dwProcessCountPerCommandList, D3D12_CPU_DESCRIPTOR_HANDLE rtv, D3D12_CPU_DESCRIPTOR_HANDLE dsv, const D3D12_VIEWPORT& refViewport, const D3D12_RECT& refScissorRect);
+	DWORD Process(DWORD dwThreadIndex, std::shared_ptr<CommandListPool> pCommandListPool, ComPtr<ID3D12CommandQueue> pCommandQueue, DWORD dwProcessCountPerCommandList, D3D12_CPU_DESCRIPTOR_HANDLE rtv, D3D12_CPU_DESCRIPTOR_HANDLE dsv, const D3D12_VIEWPORT& refViewport, const D3D12_RECT& refScissorRect);
 	void Reset();
 
 

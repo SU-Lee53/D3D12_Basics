@@ -67,6 +67,9 @@
     <Filter Include="Renderer\TextureManager">
       <UniqueIdentifier>{e5e2eedf-0af9-4be9-93da-9fc957a53793}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\RenderThread">
+      <UniqueIdentifier>{31415e07-3398-4d5d-9efd-f610ea69e930}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -147,6 +150,12 @@
     <ClInclude Include="Typedef.h">
       <Filter>typdef</Filter>
     </ClInclude>
+    <ClInclude Include="RenderThread.h">
+      <Filter>Renderer\RenderThread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\D3D_Util\ProcessorInfo.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="20. MultiThread_Rendering.ico">
@@ -163,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="..\20. Multi-Threads Rendering.md" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\D3D_Util\VertexUtil.cpp">
@@ -227,6 +237,12 @@
     </ClCompile>
     <ClCompile Include="SpriteObject.cpp">
       <Filter>Renderer\SpriteObject</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderThread.cpp">
+      <Filter>Renderer\RenderThread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\D3D_Util\ProcessorInfo.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

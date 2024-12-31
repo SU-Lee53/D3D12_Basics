@@ -33,7 +33,8 @@ public:
 	~BasicMeshObject();
 
 	BOOL Initialize(std::shared_ptr<D3D12Renderer> pRenderer);
-	void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld);
+	//void Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld);
+	void Draw(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld);
 	
 public:
 	BOOL BeginCreateMesh(const BasicVertex* pVertexList, DWORD dwVertexNum, DWORD dwTriGroupCount);

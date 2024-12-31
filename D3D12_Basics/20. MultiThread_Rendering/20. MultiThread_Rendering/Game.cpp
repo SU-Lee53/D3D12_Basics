@@ -33,7 +33,7 @@ BOOL Game::Initialize(HWND hWnd, BOOL bEnableDebugLayer, BOOL bEnableGBV)
 	m_pSpriteObjCommon = m_pRenderer->CreateSpriteObject();
 
 	const DWORD GAME_OBJ_COUNT = 1000;
-	for (DWORD i = 0; i < GAME_OBJ_COUNT / 100; i++)
+	for (DWORD i = 0; i < GAME_OBJ_COUNT; i++)
 	{
 		shared_ptr<GameObject> pGameObj = CreateGameObject();
 		if (pGameObj)

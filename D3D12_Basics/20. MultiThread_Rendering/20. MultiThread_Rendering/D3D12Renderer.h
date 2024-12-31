@@ -11,13 +11,16 @@ class FontManager;
 class TextureManager;
 class RenderQueue;
 class CommandListPool;
+struct RENDER_THREAD_DESC;
 
 #define USE_MULTIPLE_COMMAND_LIST
+#define USE_MULTI_THREAD
 
 class D3D12Renderer : public std::enable_shared_from_this<D3D12Renderer>
 {
-	const static UINT MAX_DRAW_COUNT_PER_FRAME = 1024;
+	const static UINT MAX_DRAW_COUNT_PER_FRAME = 4096;
 	static const UINT MAX_DESCRIPTOR_COUNT = 4096;
+	static const UINT MAX_RENDER_THREAD_COUNT = 14;	// 현재 CPU 물리코어수 14개 (i9-13900H)
 
 public:
 	D3D12Renderer();
@@ -37,6 +40,13 @@ private:
 
 	BOOL CreateFence();
 	BOOL CreateDepthStencil(UINT width, UINT height);
+
+	// Multithread functions
+	// CleanUp 은 아래 CleanUp 모아둔 곳으로 뺌
+	BOOL InitRenderThreadPool(DWORD dwThreadCount);
+
+public:
+	void ProcessByThread(DWORD dwThreadIndex);
 
 public:
 	// Camera Functions
@@ -88,8 +98,8 @@ public:
 	ComPtr<ID3D12Device5>& GetDevice() { return m_pD3DDevice; }
 	std::shared_ptr<D3D12ResourceManager>& GetResourceManager() { return m_pResourceManager; }
 
-	std::shared_ptr<DescriptorPool>& GetDescriptorPool() { return m_pDescriptorPools[m_dwCurContextIndex]; }
-	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool(CONSTANT_BUFFER_TYPE type);
+	std::shared_ptr<DescriptorPool>& GetDescriptorPool(DWORD dwThreadIndex) { return m_pDescriptorPools[m_dwCurContextIndex][dwThreadIndex]; }
+	std::shared_ptr<SimpleConstantBufferPool>& GetConstantBufferPool(CONSTANT_BUFFER_TYPE type, DWORD dwThreadIndex);
 
 	UINT& GetSrvDescriptorSize() { return m_uiSRVDescriptorSize; }
 	std::shared_ptr<SingleDescriptorAllocator>& GetSingleDescriptorAllocator() { return m_pSingleDescriptorAllocator; }
@@ -103,7 +113,7 @@ public:
 	DWORD GetScreenWidth() { return m_dwWidth; }
 	DWORD GetScreenHeight() { return m_dwHeight; }
 	DWORD GetDPI() { return m_fDPI; }
-	
+
 	DWORD GetCommandListCount();
 
 private:
@@ -111,24 +121,30 @@ private:
 	void	CleanupFence();
 	void	CleanupDescriptorHeapForRTV();
 	void	CleanupDescriptorHeapForDSV();
-
+	void	CleanUpRenderThreadPool();
 
 
 private:
 	HWND m_hWnd = nullptr;
 	ComPtr<ID3D12Device5> m_pD3DDevice = nullptr;
-	
+
 	// Com for Command Queue
 	ComPtr<ID3D12CommandQueue>			m_pCommandQueue = nullptr;
 
 	// Resource for Rendering
-	
-	// Commdand Allocator-List 쌍은 이제 CommandListPool 이 관리
-	//ComPtr<ID3D12CommandAllocator>		m_pCommandAllocators[MAX_PENDING_FRAME_COUNT] = {};
-	//ComPtr<ID3D12GraphicsCommandList>		m_pCommandLists[MAX_PENDING_FRAME_COUNT] = {};
-	std::shared_ptr<CommandListPool>		m_pCommandListPools[MAX_PENDING_FRAME_COUNT] = {};
-	std::shared_ptr<DescriptorPool>			m_pDescriptorPools[MAX_PENDING_FRAME_COUNT] = {};
-	std::shared_ptr<ConstantBufferManager>	m_pConstantBufferManagers[MAX_PENDING_FRAME_COUNT] = {};
+
+	// 멀티스레드에 활용될 자원을 스레드수만큼 늘림
+	std::shared_ptr<CommandListPool>		m_pCommandListPools[MAX_PENDING_FRAME_COUNT][MAX_RENDER_THREAD_COUNT] = {};
+	std::shared_ptr<DescriptorPool>			m_pDescriptorPools[MAX_PENDING_FRAME_COUNT][MAX_RENDER_THREAD_COUNT] = {};
+	std::shared_ptr<ConstantBufferManager>	m_pConstantBufferManagers[MAX_PENDING_FRAME_COUNT][MAX_RENDER_THREAD_COUNT] = {};
+	std::shared_ptr<RenderQueue>				m_pRenderQueues[MAX_RENDER_THREAD_COUNT] = {};
+	DWORD m_dwRenderThreadCount = 0;
+	DWORD m_dwCurThreadIndex = 0;
+
+
+	LONG volatile m_lActiveThreadCount = 0;
+	HANDLE m_hCompleteEvent = nullptr;
+	std::vector<RENDER_THREAD_DESC> m_ThreadDescs = {};
 
 	UINT64 m_ui64LastFenceValues[MAX_PENDING_FRAME_COUNT] = {};
 	UINT64 m_ui64FenceValue = 0;
@@ -172,6 +188,5 @@ private:
 	std::shared_ptr<SingleDescriptorAllocator>	m_pSingleDescriptorAllocator = nullptr;
 	std::shared_ptr<FontManager>				m_pFontManager = nullptr;
 	std::shared_ptr<TextureManager>				m_pTextureManager = nullptr;
-	std::shared_ptr<RenderQueue>				m_pRenderQueue = nullptr;
 };
 

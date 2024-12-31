@@ -140,6 +140,7 @@
     <ClInclude Include="..\D3D_Util\D3DUtil.h" />
     <ClInclude Include="..\D3D_Util\IndexCreator.h" />
     <ClInclude Include="..\D3D_Util\LinkedList.h" />
+    <ClInclude Include="..\D3D_Util\ProcessorInfo.h" />
     <ClInclude Include="..\D3D_Util\VertexUtil.h" />
     <ClInclude Include="..\DirectXTex\DirectXTex.h" />
     <ClInclude Include="BasicMeshObject.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer_typedef.h" />
     <ClInclude Include="RenderQueue.h" />
+    <ClInclude Include="RenderThread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SimpleConstantBufferPool.h" />
     <ClInclude Include="SingleDescriptorAllocator.h" />
@@ -172,12 +174,14 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\20. Multi-Threads Rendering.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\D3D_Util\D3DUtil.cpp" />
     <ClCompile Include="..\D3D_Util\IndexCreator.cpp" />
     <ClCompile Include="..\D3D_Util\LinkedList.cpp" />
+    <ClCompile Include="..\D3D_Util\ProcessorInfo.cpp" />
     <ClCompile Include="..\D3D_Util\VertexUtil.cpp" />
     <ClCompile Include="BasicMeshObject.cpp" />
     <ClCompile Include="CommandListPool.cpp" />
@@ -196,6 +200,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RenderQueue.cpp" />
+    <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleConstantBufferPool.cpp" />
     <ClCompile Include="SingleDescriptorAllocator.cpp" />
     <ClCompile Include="SpriteObject.cpp" />

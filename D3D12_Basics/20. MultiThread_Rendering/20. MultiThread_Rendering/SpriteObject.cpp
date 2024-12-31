@@ -249,19 +249,110 @@ BOOL SpriteObject::InitMesh()
 
 }
 
-void SpriteObject::Draw(ComPtr<ID3D12GraphicsCommandList>& refCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z)
+#pragma region OLD_DRAW_NO_MULTITHREAD
+//void SpriteObject::Draw(ComPtr<ID3D12GraphicsCommandList>& refCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z)
+//{
+//	XMFLOAT2 Scale = { m_Scale.x * refScale.x, m_Scale.y * refScale.y };
+//	DrawWithTex(refCommandList, refPos, Scale, &m_Rect, z, m_pTexHandle.lock().get());
+//}
+//
+//void SpriteObject::DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle)
+//{
+//	ComPtr<ID3D12Device5> prefD3DDevice = m_pRenderer.lock()->GetDevice();
+//	UINT srvDescriptorSize = m_pRenderer.lock()->GetSrvDescriptorSize();
+//	std::shared_ptr<DescriptorPool> prefDescriptorPool = m_pRenderer.lock()->GetDescriptorPool();
+//	ComPtr<ID3D12DescriptorHeap> prefDescriptorHeap = prefDescriptorPool->GetDescriptorHeap();
+//	std::shared_ptr<SimpleConstantBufferPool> prefConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_SPRITE);
+//
+//	UINT TexWidth = 0;
+//	UINT TexHeight = 0;
+//	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
+//	if (pTexHandle)
+//	{
+//		D3D12_RESOURCE_DESC desc = pTexHandle->pTexResource->GetDesc();
+//		TexWidth = desc.Width;
+//		TexHeight = desc.Height;
+//		srv = pTexHandle->srv;
+//	}
+//
+//	RECT rect;
+//	if (!pRect)
+//	{
+//		rect.left = 0;
+//		rect.top = 0;
+//		rect.right = TexWidth;
+//		rect.bottom = TexHeight;
+//		pRect = &rect;
+//	}
+//
+//	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
+//	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
+//
+//	if (!prefDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, DESCRIPTOR_COUNT_FOR_DRAW))
+//	{
+//		__debugbreak();
+//		return;
+//	}
+//
+//	// 각각의 Draw() 에 대해 독립적인 Constant Buffer 를 사용한다
+//	CB_CONTAINER* pCB = prefConstantBufferPool->Alloc();
+//	if (!pCB)
+//	{
+//		__debugbreak();
+//		return;
+//	}
+//
+//	CONSTANT_BUFFER_SPRITE* pConstantBufferSprite = (CONSTANT_BUFFER_SPRITE*)pCB->pSysMemAddr;
+//
+//	pConstantBufferSprite->ScreenRes.x = (float)m_pRenderer.lock()->GetScreenWidth();
+//	pConstantBufferSprite->ScreenRes.y = (float)m_pRenderer.lock()->GetScreenHeight();
+//	pConstantBufferSprite->Pos = refPos;
+//	pConstantBufferSprite->Scale = refScale;
+//	pConstantBufferSprite->TexSize.x = (float)TexWidth;
+//	pConstantBufferSprite->TexSize.y = (float)TexHeight;
+//	pConstantBufferSprite->TexSamplePos.x = (float)pRect->left;
+//	pConstantBufferSprite->TexSamplePos.y = (float)pRect->top;
+//	pConstantBufferSprite->TexSampleSize.x = (float)(pRect->right - pRect->left);
+//	pConstantBufferSprite->TexSampleSize.y = (float)(pRect->bottom - pRect->top);
+//	pConstantBufferSprite->Z = Z;
+//	pConstantBufferSprite->Alpha = 1.0f;
+//
+//	prefCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
+//	prefCommandList->SetDescriptorHeaps(1, prefDescriptorHeap.GetAddressOf());
+//
+//	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvDest(cpuDescriptorTable, SPRITE_DESCRIPTOR_INDEX_CBV, srvDescriptorSize);
+//	prefD3DDevice->CopyDescriptorsSimple(1, cbvDest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//
+//	if (srv.ptr)
+//	{
+//		CD3DX12_CPU_DESCRIPTOR_HANDLE srvDest(cpuDescriptorTable, SPRITE_DESCRIPTOR_INDEX_TEX, srvDescriptorSize);
+//		prefD3DDevice->CopyDescriptorsSimple(1, srvDest, srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//	}
+//
+//	prefCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
+//
+//	prefCommandList->SetPipelineState(m_pPipelineState.Get());
+//	prefCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	prefCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+//	prefCommandList->IASetIndexBuffer(&m_IndexBufferView);
+//	prefCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+//
+//}
+#pragma endregion OLD_DRAW_NO_MULTITHREAD
+
+void SpriteObject::Draw(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, float z)
 {
 	XMFLOAT2 Scale = { m_Scale.x * refScale.x, m_Scale.y * refScale.y };
-	DrawWithTex(refCommandList, refPos, Scale, &m_Rect, z, m_pTexHandle.lock().get());
+	DrawWithTex(dwThreadIndex, prefCommandList, refPos, Scale, &m_Rect, z, m_pTexHandle.lock().get());
 }
 
-void SpriteObject::DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle)
+void SpriteObject::DrawWithTex(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList>& prefCommandList, const XMFLOAT2& refPos, const XMFLOAT2& refScale, const RECT* pRect, float Z, const TEXTURE_HANDLE* pTexHandle)
 {
 	ComPtr<ID3D12Device5> prefD3DDevice = m_pRenderer.lock()->GetDevice();
 	UINT srvDescriptorSize = m_pRenderer.lock()->GetSrvDescriptorSize();
-	std::shared_ptr<DescriptorPool> prefDescriptorPool = m_pRenderer.lock()->GetDescriptorPool();
+	std::shared_ptr<DescriptorPool> prefDescriptorPool = m_pRenderer.lock()->GetDescriptorPool(dwThreadIndex);
 	ComPtr<ID3D12DescriptorHeap> prefDescriptorHeap = prefDescriptorPool->GetDescriptorHeap();
-	std::shared_ptr<SimpleConstantBufferPool> prefConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_SPRITE);
+	std::shared_ptr<SimpleConstantBufferPool> prefConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_SPRITE, dwThreadIndex);
 
 	UINT TexWidth = 0;
 	UINT TexHeight = 0;
@@ -335,7 +426,6 @@ void SpriteObject::DrawWithTex(ComPtr<ID3D12GraphicsCommandList>& prefCommandLis
 	prefCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
 	prefCommandList->IASetIndexBuffer(&m_IndexBufferView);
 	prefCommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
 }
 
 void SpriteObject::CleanUp()

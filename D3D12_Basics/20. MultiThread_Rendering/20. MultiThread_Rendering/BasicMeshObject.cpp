@@ -30,16 +30,16 @@ BOOL BasicMeshObject::Initialize(std::shared_ptr<D3D12Renderer> pRenderer)
 	return bResult;
 }
 
-void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld)
+void BasicMeshObject::Draw(DWORD dwThreadIndex, ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld)
 {
 	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
 	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
 
 	ComPtr<ID3D12Device5> prefD3DDevice = m_pRenderer.lock()->GetDevice();
 	UINT srvDescriptorSize = m_pRenderer.lock()->GetSrvDescriptorSize();
-	std::shared_ptr<DescriptorPool> refDescriptorPool = m_pRenderer.lock()->GetDescriptorPool();
+	std::shared_ptr<DescriptorPool> refDescriptorPool = m_pRenderer.lock()->GetDescriptorPool(dwThreadIndex);
 	ComPtr<ID3D12DescriptorHeap> refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
-	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_DEFAULT);
+	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_DEFAULT, dwThreadIndex);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
@@ -67,7 +67,7 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 
 	// Descriptor Table 을 구성
 	// 이번에 사용할 constant buffer 의 descriptor 를 렌더링용(SHADER_VISIBLE) descriptor table 에 복사
-	
+
 	// per Obj
 	CD3DX12_CPU_DESCRIPTOR_HANDLE Dest(cpuDescriptorTable, BASIC_MESH_DESCRIPTOR_INDEX_PER_OBJ_CBV, srvDescriptorSize);
 	prefD3DDevice->CopyDescriptorsSimple(1, Dest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -78,7 +78,7 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	{
 		const INDEXED_TRI_GROUP& TriGroup = m_TriGroupList[i];
 		std::shared_ptr<TEXTURE_HANDLE> pTexHandle = TriGroup.pTexHandle;
-		
+
 		if (pTexHandle)
 		{
 			prefD3DDevice->CopyDescriptorsSimple(1, Dest, pTexHandle->srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -120,6 +120,99 @@ void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const
 	}
 
 }
+
+#pragma region OLD_DRAW_NO_MULTITHREAD
+//void BasicMeshObject::Draw(ComPtr<ID3D12GraphicsCommandList> pCommandList, const XMMATRIX& pMatWorld)
+//{
+//	// 각각의 draw() 작업의 무결성을 부작하려면 draw() 작업마다 다른 영역의 Descriptor table(SHADER_VISIBLE 한) 과 다른 영역의 CBV 를 사용하여야 함
+//	// 따라서 draw() 할 때마다 CBV 는 ConstantBufferPool 에서 할당받고, 렌더러용 Descriptor Table 은 DescriptorPool 에서 할당받아와야 함
+//
+//	ComPtr<ID3D12Device5> prefD3DDevice = m_pRenderer.lock()->GetDevice();
+//	UINT srvDescriptorSize = m_pRenderer.lock()->GetSrvDescriptorSize();
+//	std::shared_ptr<DescriptorPool> refDescriptorPool = m_pRenderer.lock()->GetDescriptorPool();
+//	ComPtr<ID3D12DescriptorHeap> refDescriptorHeap = refDescriptorPool->GetDescriptorHeap();
+//	std::shared_ptr<SimpleConstantBufferPool> refConstantBufferPool = m_pRenderer.lock()->GetConstantBufferPool(CONSTANT_BUFFER_TYPE_DEFAULT);
+//
+//	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorTable = {};
+//	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescriptorTable = {};
+//	DWORD dwRequiredDescriptorCount = DESCRIPTOR_COUNT_PER_OBJ + (m_dwTriGroupCount * DESCRIPTOR_COUNT_PER_TRI_GROUP);
+//
+//	if (!refDescriptorPool->AllocDescriptorTable(cpuDescriptorTable, gpuDescriptorTable, dwRequiredDescriptorCount))
+//	{
+//		__debugbreak();
+//		return;
+//	}
+//
+//	// 각각의 draw() 에 대해 독립적인 constant buffer(내부적으로는 같은 Resource 의 영역) 을 사용함
+//	CB_CONTAINER* pCB = refConstantBufferPool->Alloc();
+//	if (!pCB)
+//	{
+//		__debugbreak();
+//		return;
+//	}
+//
+//	CONSTANT_BUFFER_DEFAULT* pConstantBufferDefault = (CONSTANT_BUFFER_DEFAULT*)pCB->pSysMemAddr;
+//
+//	// Constant Buffer 에 내용 기입
+//	m_pRenderer.lock()->GetViewProjMatrix(pConstantBufferDefault->matView, pConstantBufferDefault->matProj);
+//	pConstantBufferDefault->matWorld = XMMatrixTranspose(pMatWorld);
+//
+//	// Descriptor Table 을 구성
+//	// 이번에 사용할 constant buffer 의 descriptor 를 렌더링용(SHADER_VISIBLE) descriptor table 에 복사
+//	
+//	// per Obj
+//	CD3DX12_CPU_DESCRIPTOR_HANDLE Dest(cpuDescriptorTable, BASIC_MESH_DESCRIPTOR_INDEX_PER_OBJ_CBV, srvDescriptorSize);
+//	prefD3DDevice->CopyDescriptorsSimple(1, Dest, pCB->CBVHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//	Dest.Offset(1, srvDescriptorSize);
+//
+//	// per Tri Group
+//	for (DWORD i = 0; i < m_dwTriGroupCount; i++)
+//	{
+//		const INDEXED_TRI_GROUP& TriGroup = m_TriGroupList[i];
+//		std::shared_ptr<TEXTURE_HANDLE> pTexHandle = TriGroup.pTexHandle;
+//		
+//		if (pTexHandle)
+//		{
+//			prefD3DDevice->CopyDescriptorsSimple(1, Dest, pTexHandle->srv, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//		}
+//		else
+//		{
+//			__debugbreak();
+//		}
+//
+//		Dest.Offset(1, srvDescriptorSize);
+//	}
+//	// 여기까지 하면 현재 Root Signature 의 구조
+//	// Descriptor Table : | CBV | SRV[0] | SRV[1] | SRV[2] | SRV[3] | SRV[4] | SRV[5] | 
+//
+//
+//
+//	// Root Signature 설정
+//	pCommandList->SetGraphicsRootSignature(m_pRootSignature.Get());
+//	pCommandList->SetDescriptorHeaps(1, refDescriptorHeap.GetAddressOf());
+//
+//	pCommandList->SetPipelineState(m_pPipelineState.Get());
+//	pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	pCommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+//
+//	// Root Parameter[0] 의 Descriptor Table 을 설정함
+//	pCommandList->SetGraphicsRootDescriptorTable(0, gpuDescriptorTable);
+//
+//	// gpuDescriptorTable 에서 srvDescriptorSize 만큼 DESCRIPTOR_COUNT_PER_OBJ 을 offset 으로 이동한 D3D12_GPU_DESCRIPTOR_HANDLE -> SRV 시작주소
+//	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandleForTriGroup(gpuDescriptorTable, DESCRIPTOR_COUNT_PER_OBJ, srvDescriptorSize);
+//	for (DWORD i = 0; i < m_dwTriGroupCount; i++)
+//	{
+//		// Root Parameter[1] 의 Descriptor Table 을 설정함
+//		pCommandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandleForTriGroup);
+//		gpuDescriptorHandleForTriGroup.Offset(1, srvDescriptorSize);	// 다음 SRV로 offset 이동
+//
+//		const INDEXED_TRI_GROUP& TriGroup = m_TriGroupList[i];
+//		pCommandList->IASetIndexBuffer(&TriGroup.IndexBufferView);
+//		pCommandList->DrawIndexedInstanced(TriGroup.dwTriCount * 3, 1, 0, 0, 0);
+//	}
+//
+//}
+#pragma endregion OLD_DRAW_NO_MULTITHREAD
 
 BOOL BasicMeshObject::BeginCreateMesh(const BasicVertex* pVertexList, DWORD dwVertexNum, DWORD dwTriGroupCount)
 {
