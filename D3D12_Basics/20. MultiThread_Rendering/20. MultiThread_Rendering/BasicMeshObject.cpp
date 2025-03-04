@@ -428,7 +428,7 @@ BOOL BasicMeshObject::InitPipelineState()
 	//psoDesc.DepthStencilState.DepthEnable = FALSE;
 	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	psoDesc.DepthStencilState.StencilEnable = FALSE;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;	// 강의에 없는데 회전된 뒷면도 보려면 설정해야함
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;	
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
